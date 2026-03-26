@@ -4,6 +4,17 @@
 
 This document summarizes everything that has been created for the Network Document Folder microservice.
 
+## 🆕 Updated Architecture (March 26, 2025)
+
+**Major architectural decisions made:**
+
+1. **Dual Member Type Support**: Networks will support both internal (Apricot) and external (Snowflake upload) members
+2. **Hybrid Data Source Strategy**: Query DSF views for internal members, Snowflake tables for external members
+3. **Snowflake-Based Matching**: Leverage Snowflake's built-in similarity matching instead of custom algorithm
+4. **Data Standard Validation**: New "Participant Incident" type with enforced structure requirements
+
+See `docs/ARCHITECTURE.md` for detailed analysis and decision matrix.
+
 ---
 
 ## 📦 Deliverables
@@ -429,25 +440,192 @@ src/NetworkDocumentFolder/
 
 ---
 
-## ✨ Summary
+## 🔄 Updated Implementation Plan (Phased Approach)
 
-**Status**: 🎉 **Architecture Phase Complete**
+### Phase 0: Data Standards Enhancement (2-3 weeks)
 
-Everything needed to start implementation is ready:
-- ✅ Complete database schema with test data
-- ✅ Detailed matching algorithm specification
-- ✅ Full GraphQL API design with examples
-- ✅ Interactive demo for stakeholder buy-in
-- ✅ Comprehensive architecture documentation
-- ✅ Clear implementation roadmap
+**Location**: `Apricot_Files/apricot-client-portal/src/DataStandards/`
 
-**Next Milestone**: Backend implementation kickoff
+**Tasks**:
+1. Add `standard_type` dropdown to Data Standard creation form
+   - Options: "General", "Participant Incident"
+   - Default: "General"
 
-**Estimated Completion**: 9-12 weeks from today
+2. Build validation engine for "Participant Incident" type:
+   - ✅ Must have exactly 1 Participant Tier 1 form
+   - ✅ Must have exactly 1 Incident Tier 1 form (linked to Participant)
+   - ✅ Participant must include required fields:
+     - Name (text/name field type)
+     - Date of Birth (date field type)
+     - Social Security Number (text/encrypted field type)
+     - Address (text/address field type)
+   - ✅ Additional fields can be added (validation rules extensible)
+
+3. Display validation errors during DS creation
+4. Prevent saving DS if validation fails
+5. Show validation rules as checklist in UI
+
+**Note**: Validation rules are stored in `data_standard_validation_rules` table and can be extended for future data standard types.
 
 ---
 
-**Document Version**: 1.0.0
+### Phase 1: Internal Members Only (MVP) - 4-5 weeks
+
+**Scope**: Network members are ALL Apricot tenants with DSF views
+
+**Database**:
+- ✅ Schema already defined (internal member support)
+- Run migration to add tables
+- Seed validation rules for "Participant Incident" type
+
+**Backend Services**:
+```
+src/application/services/
+  ├── networkDocumentFolderService.ts
+  ├── networkParticipantService.ts
+  ├── networkMatchingService.ts (basic algorithm)
+  └── networkCacheService.ts
+```
+
+**Key Features**:
+- Query DSF views from all network member orgs (in parallel)
+- Aggregate participant data
+- Basic matching algorithm (name + DOB + SSN similarity)
+- Cache results in Redis (5-min TTL)
+- Real-time updates via GraphQL subscriptions
+
+**GraphQL API**:
+- Queries: `networkParticipants`, `networkIncidents`
+- Mutations: `confirmMatch`, `rejectMatch`, `createIncident`
+- Subscriptions: `participantUpdated`, `incidentUpdated`
+
+**Frontend**:
+- Network Document Folder React app (MVP)
+- Connection status indicator (pulsing green dot)
+- Real-time updates (no "Last synced" text)
+- Participant matching UI
+- Incident coordination
+
+**No Snowflake/Impact Hub dependency needed!**
+
+---
+
+### Phase 2: External Member Support - 3-4 weeks
+
+**Scope**: Add support for orgs whose data is in Impact Hub (not Apricot DSF)
+
+**Key Architectural Point**:
+- External orgs STILL have Apricot `org_id` (for auth/permissions/network membership)
+- But their participant DATA lives in Impact Hub (Snowflake), not Apricot `data_N` tables
+- They have limited Apricot UI access (network folder only, not full case management)
+- This is because Apricot is bad at storing large volumes of data
+
+**Database Updates**:
+- `network_member_orgs.member_type` = 'external'
+- `network_member_orgs.impact_hub_view` = name of view to query
+- All external orgs must have `org_id` (they're still Apricot orgs!)
+
+**Backend Services**:
+```
+src/application/services/
+  ├── dataSourceRouter.ts (NEW)
+  │   - Routes queries based on member_type
+  │   - internal → query DSF view
+  │   - external → query Impact Hub view
+  │
+  ├── impactHubConnectionService.ts (NEW)
+  │   - Manages Snowflake connection for Impact Hub queries
+  │
+  └── impactHubMatchingService.ts (NEW)
+      - Leverage Snowflake similarity matching
+      - EDITDISTANCE(), JAROWINKLER_SIMILARITY()
+```
+
+**Query Flow**:
+```typescript
+async function getNetworkParticipants(networkId) {
+  const members = await getNetworkMembers(networkId);
+
+  const results = await Promise.all(
+    members.map(async (member) => {
+      if (member.member_type === 'internal') {
+        // Query DSF view (Apricot Postgres)
+        return queryDSFView(member.org_id, member.data_standard_form_id);
+      } else {
+        // Query Impact Hub (Snowflake)
+        return queryImpactHubView(member.impact_hub_view);
+      }
+    })
+  );
+
+  return aggregateResults(results);
+}
+```
+
+**Matching Strategy**:
+- Sync all participants (internal + external) to Impact Hub matching workspace
+- Run Snowflake similarity queries (background job, every 30 min)
+- Store potential matches in `network_participant_potential_matches`
+- Present to users for confirmation
+
+---
+
+### Updated Timeline
+
+| Phase | Duration | Dependencies | Snowflake Required? |
+|-------|----------|--------------|---------------------|
+| **Phase 0: Data Standards** | 2-3 weeks | None | ❌ No |
+| **Phase 1: Internal Members (MVP)** | 4-5 weeks | Phase 0 | ❌ No |
+| **Phase 2: External Members** | 3-4 weeks | Phase 1, Impact Hub access | ✅ Yes |
+| **Phase 3: Testing & Polish** | 2-3 weeks | Phase 2 | N/A |
+| **Phase 4: Deployment** | 1 week | Phase 3 | N/A |
+
+**Phase 1 Total**: 6-8 weeks (no Snowflake dependency!)
+**Phase 1+2 Total**: 12-17 weeks (with external member support)
+
+---
+
+### Critical Dependencies
+
+**Phase 1 (MVP)**:
+- ✅ No external dependencies
+- ✅ Uses existing Apricot infrastructure
+- ✅ Uses existing DSF view pattern
+- ✅ Redis already available
+
+**Phase 2 (External Members)**:
+- ⚠️ Requires Snowflake/Impact Hub access
+- ⚠️ Requires external org data in standardized schema
+- ⚠️ External orgs must be set up as Apricot orgs (for auth)
+
+---
+
+## ✨ Summary
+
+**Status**: 🎉 **Architecture Phase Complete + Updated**
+
+Everything needed to start implementation is ready:
+- ✅ Complete database schema with test data (UPDATED: external member support)
+- ✅ ~~Detailed matching algorithm specification~~ → Pivoted to Snowflake matching
+- ✅ Full GraphQL API design with examples
+- ✅ Interactive demo for stakeholder buy-in
+- ✅ Comprehensive architecture documentation (UPDATED: dual member types, hybrid approach)
+- ✅ Clear implementation roadmap (UPDATED: added Phase 0 for data standards)
+
+**Major Architectural Updates (March 26, 2025)**:
+- 🆕 Hybrid data source strategy (DSF views + Snowflake tables)
+- 🆕 Snowflake-based similarity matching (leveraging built-in functions)
+- 🆕 Data Standard validation for "Participant Incident" type
+- 🆕 Support for external members (non-Apricot orgs)
+
+**Next Milestone**: Data Standards enhancement (Phase 0)
+
+**Estimated Completion**: 16-21 weeks from today (was 9-12 weeks)
+
+---
+
+**Document Version**: 2.0.0
 **Created**: March 24, 2025
-**Status**: ✅ Complete - Ready for Implementation
-**Next Review**: After Phase 1 completion
+**Updated**: March 26, 2025 - Added external member support, Snowflake matching, data standard validation
+**Status**: ✅ Complete - Ready for Implementation (Updated Architecture)
+**Next Review**: After Phase 0 (Data Standards) completion

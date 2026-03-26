@@ -206,40 +206,6 @@
             }
         }
 
-        .status-text {
-            color: var(--gray-600);
-            font-size: 13px;
-        }
-
-        .sync-btn {
-            background: none;
-            border: none;
-            color: var(--gray-500);
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            font-size: 14px;
-        }
-
-        .sync-btn:hover {
-            color: var(--primary-teal);
-            background: var(--gray-100);
-        }
-
-        .sync-btn.spinning {
-            animation: spin 1s linear;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         /* Network Member Organizations Table */
         .member-org-section {
             background: white;
@@ -913,9 +879,6 @@
         }
 
         .secondary-breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             color: var(--gray-600);
             font-size: 14px;
         }
@@ -923,18 +886,14 @@
         .secondary-breadcrumb a {
             color: var(--gray-600);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
         .secondary-breadcrumb a:hover {
             color: var(--gray-900);
         }
 
-        .secondary-breadcrumb-id {
+        .secondary-breadcrumb strong {
             color: var(--gray-900);
-            font-weight: 500;
         }
 
         .secondary-actions {
@@ -1778,10 +1737,6 @@
                         <span class="status-dot"></span>
                         <span style="color: var(--green); font-weight: 500;">Connected</span>
                     </div>
-                    <span class="status-text">Last synced: 2 minutes ago</span>
-                    <button class="sync-btn" onclick="manualSync()" title="Sync now">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
                 </div>
             </div>
 
@@ -1999,10 +1954,6 @@
                     <span class="status-dot"></span>
                     <span style="color: var(--green); font-weight: 500;">Connected</span>
                 </div>
-                <span class="status-text">Last synced: 2 minutes ago</span>
-                <button class="sync-btn" onclick="manualSync()" title="Sync now">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
             </div>
         </div>
 
@@ -3040,11 +2991,10 @@
         <nav class="secondary-nav">
             <div class="secondary-nav-content">
                 <div class="secondary-breadcrumb">
-                    <a href="#" onclick="closeParticipantDetail(); return false;">
-                        <i class="fas fa-arrow-left"></i> Back to Participant Incident
-                    </a>
-                    <span>&gt;</span>
-                    <span class="secondary-breadcrumb-id">P-1042</span>
+                    <a href="#" onclick="showNetworkOverview(); return false;">My Networks</a> &gt;
+                    <a href="#" onclick="showNetworkOverview(); return false;">Chicago West Side CVI Network</a> &gt;
+                    <a href="#" onclick="closeParticipantDetail(); return false;">Participant Incident</a> &gt;
+                    <strong>P-1042</strong>
                 </div>
                 <div class="secondary-actions">
                     <button class="btn" onclick="togglePII()">
@@ -3473,11 +3423,10 @@
         <nav class="secondary-nav">
             <div class="secondary-nav-content">
                 <div class="secondary-breadcrumb">
-                    <a href="#" onclick="closeIncidentDetail(); return false;">
-                        <i class="fas fa-arrow-left"></i> Back to Participant Incident
-                    </a>
-                    <span>&gt;</span>
-                    <span class="secondary-breadcrumb-id">INC-0091</span>
+                    <a href="#" onclick="showNetworkOverview(); return false;">My Networks</a> &gt;
+                    <a href="#" onclick="showNetworkOverview(); return false;">Chicago West Side CVI Network</a> &gt;
+                    <a href="#" onclick="closeIncidentDetail(); return false;">Participant Incident</a> &gt;
+                    <strong>INC-0091</strong>
                 </div>
                 <div class="secondary-actions">
                     <button class="btn">
@@ -3882,86 +3831,25 @@
             // - Show/hide organization settings
         }
 
-        // Sync animation and status update
-        function triggerSync() {
-            // Get all status dots
+        // Real-time connection status (via GraphQL subscriptions)
+        // In the real app, this would monitor WebSocket connection state
+        // For demo: status dot pulses continuously to show "connected" state
+        function initializeConnectionStatus() {
             const statusDots = document.querySelectorAll('.status-dot');
-            const statusTexts = document.querySelectorAll('.status-text');
 
-            // Add pulse animation
-            statusDots.forEach(dot => {
-                dot.classList.add('pulse');
-                // Remove class after animation completes
-                setTimeout(() => {
-                    dot.classList.remove('pulse');
-                }, 1500);
-            });
-
-            // Update "Last synced" text
-            statusTexts.forEach(text => {
-                text.textContent = 'Last synced: just now';
-            });
-
-            // Start the countdown timer
-            updateSyncTime();
+            // Pulse animation every 2 seconds to show active connection
+            setInterval(() => {
+                statusDots.forEach(dot => {
+                    dot.classList.add('pulse');
+                    setTimeout(() => {
+                        dot.classList.remove('pulse');
+                    }, 1500);
+                });
+            }, 2000);
         }
 
-        // Update sync time display
-        let lastSyncTimestamp = Date.now();
-        function updateSyncTime() {
-            const statusTexts = document.querySelectorAll('.status-text');
-            const elapsed = Date.now() - lastSyncTimestamp;
-            const minutes = Math.floor(elapsed / 60000);
-            const hours = Math.floor(minutes / 60);
-
-            let timeText;
-            if (minutes < 1) {
-                timeText = 'Last synced: just now';
-            } else if (minutes < 60) {
-                timeText = `Last synced: ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-            } else {
-                timeText = `Last synced: ${hours} hour${hours > 1 ? 's' : ''} ago`;
-            }
-
-            statusTexts.forEach(text => {
-                text.textContent = timeText;
-            });
-        }
-
-        // Manual sync triggered by user
-        function manualSync() {
-            const syncButtons = document.querySelectorAll('.sync-btn');
-
-            // Spin the icon
-            syncButtons.forEach(btn => {
-                btn.classList.add('spinning');
-                btn.disabled = true;
-                setTimeout(() => {
-                    btn.classList.remove('spinning');
-                    btn.disabled = false;
-                }, 1000);
-            });
-
-            // Trigger sync after short delay (simulate API call)
-            setTimeout(() => {
-                triggerSync();
-                lastSyncTimestamp = Date.now();
-            }, 800);
-        }
-
-        // Simulate periodic syncs (for demo purposes)
-        function startSyncSimulation() {
-            // Random sync every 15-45 seconds
-            const randomInterval = Math.random() * 30000 + 15000;
-            setTimeout(() => {
-                triggerSync();
-                lastSyncTimestamp = Date.now();
-                startSyncSimulation();
-            }, randomInterval);
-        }
-
-        // Update sync time display every second
-        setInterval(updateSyncTime, 1000);
+        // Initialize on page load
+        initializeConnectionStatus();
 
         // Match modal
         function showMatchModal() {

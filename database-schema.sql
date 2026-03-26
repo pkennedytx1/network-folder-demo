@@ -371,14 +371,118 @@ CREATE TABLE network_participant_potential_matches (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
+-- NETWORK MEMBER ORGANIZATIONS (Internal vs External)
+-- ============================================================================
+
+-- Tracks which organizations are members of which networks
+-- Supports both internal (Apricot DSF) and external (Impact Hub) members
+--
+-- PHASE 1 (MVP): Only 'internal' members (all orgs are Apricot tenants with DSF views)
+-- PHASE 2: Add 'external' members (orgs with Apricot accounts but data in Impact Hub)
+--
+-- Note: External orgs still have an org_id (for auth/permissions), but their
+--       participant data lives in Impact Hub (Snowflake), not Apricot data_N tables
+CREATE TABLE network_member_orgs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    network_id BIGINT UNSIGNED NOT NULL,
+
+    -- Organization identification (always has org_id, even for external)
+    org_id BIGINT UNSIGNED NOT NULL COMMENT 'Apricot org ID (for auth/permissions)',
+    member_type ENUM('internal', 'external') NOT NULL DEFAULT 'internal',
+
+    -- Internal member configuration (Phase 1 - MVP)
+    data_standard_form_id BIGINT UNSIGNED NULL COMMENT 'DSF view to query for internal members',
+
+    -- External member configuration (Phase 2 - Future)
+    impact_hub_view VARCHAR(255) NULL COMMENT 'Impact Hub view name to query for external members',
+    impact_hub_schema VARCHAR(255) NULL DEFAULT 'public' COMMENT 'Schema in Impact Hub (Snowflake)',
+    data_upload_cadence ENUM('realtime', 'hourly', 'daily', 'weekly') NULL COMMENT 'How often external org syncs to Impact Hub',
+
+    -- Common settings
+    pii_sharing_enabled BOOLEAN DEFAULT FALSE COMMENT 'Whether org shares PII with network',
+    pii_consent_confirmed_at TIMESTAMP NULL,
+    pii_consent_confirmed_by BIGINT UNSIGNED NULL,
+
+    -- Status
+    active BOOLEAN DEFAULT TRUE,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    removed_at TIMESTAMP NULL,
+
+    -- Indexes
+    INDEX idx_network_active (network_id, active),
+    INDEX idx_network_type (network_id, member_type),
+    INDEX idx_org (org_id),
+
+    FOREIGN KEY (network_id) REFERENCES networks(id) ON DELETE CASCADE,
+    FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE,
+    FOREIGN KEY (data_standard_form_id) REFERENCES data_standard_forms(id) ON DELETE SET NULL,
+
+    -- Constraints: Ensure proper configuration based on member type
+    CONSTRAINT chk_member_config CHECK (
+        (member_type = 'internal' AND data_standard_form_id IS NOT NULL) OR
+        (member_type = 'external' AND impact_hub_view IS NOT NULL)
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='Phase 1: internal only. Phase 2: add external (Impact Hub query).';
+
+-- ============================================================================
+-- DATA STANDARD VALIDATION RULES
+-- ============================================================================
+
+-- Stores validation rules for different data standard types
+-- Used to enforce required fields/structure for Participant Incident type
+CREATE TABLE data_standard_validation_rules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    data_standard_id BIGINT UNSIGNED NOT NULL,
+
+    -- Rule definition
+    rule_type ENUM(
+        'required_tier1',
+        'required_field',
+        'required_field_type',
+        'required_link',
+        'min_field_count'
+    ) NOT NULL,
+
+    -- Rule configuration (JSON)
+    rule_config JSON NOT NULL COMMENT 'Rule parameters: {"tier1_type": "participant", "required_fields": ["name", "dob"]}',
+
+    -- Human-readable description
+    rule_description TEXT NULL,
+
+    -- Validation error message
+    error_message TEXT NOT NULL,
+
+    -- Status
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_data_standard (data_standard_id, active),
+
+    FOREIGN KEY (data_standard_id) REFERENCES data_standards(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default validation rules for Participant Incident type
+-- These will be applied when a data standard is created with type='participant_incident'
+INSERT INTO data_standard_validation_rules (data_standard_id, rule_type, rule_config, rule_description, error_message) VALUES
+-- Note: data_standard_id = 0 means "template for new participant_incident standards"
+(0, 'required_tier1', '{"tier1_type": "participant"}', 'Must have a Participant Tier 1 form', 'Participant Incident data standards must include a Participant (Tier 1) form'),
+(0, 'required_tier1', '{"tier1_type": "incident"}', 'Must have an Incident Tier 1 form linked to Participant', 'Participant Incident data standards must include an Incident (Tier 1) form'),
+(0, 'required_field', '{"tier1_type": "participant", "field_name": "name", "field_types": ["text", "name"]}', 'Participant must have a Name field', 'Participant form must include a Name field (text type)'),
+(0, 'required_field', '{"tier1_type": "participant", "field_name": "dob", "field_types": ["date"]}', 'Participant must have a Date of Birth field', 'Participant form must include a Date of Birth field (date type)'),
+(0, 'required_field', '{"tier1_type": "participant", "field_name": "ssn", "field_types": ["text", "encrypted"]}', 'Participant must have a Social Security Number field', 'Participant form must include a Social Security Number field (text/encrypted type)'),
+(0, 'required_field', '{"tier1_type": "participant", "field_name": "address", "field_types": ["text", "address"]}', 'Participant must have an Address field', 'Participant form must include an Address field (text/address type)'),
+(0, 'required_link', '{"from_tier1": "incident", "to_tier1": "participant", "link_type": "many_to_many"}', 'Incident must be linked to Participant', 'Incident form must have a linking field (type 38/39) to Participant form');
+
+-- ============================================================================
 -- ALTERATIONS TO EXISTING TABLES
 -- ============================================================================
 
 -- Add standard_type to data_standards table (if not exists)
--- This categorizes data standards as participant, incident, or other types
+-- This categorizes data standards to enable network folder features
 ALTER TABLE data_standards
-ADD COLUMN standard_type ENUM('participant', 'incident', 'other') NOT NULL DEFAULT 'other'
-COMMENT 'Type of data standard - determines network folder features available';
+ADD COLUMN standard_type ENUM('general', 'participant_incident', 'other') NOT NULL DEFAULT 'general'
+COMMENT 'Type of data standard - participant_incident enables network document folder';
 
 -- Add index for filtering by type
 CREATE INDEX idx_standard_type ON data_standards(standard_type);

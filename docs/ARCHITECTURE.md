@@ -492,10 +492,11 @@ REFERRAL_{network_id}_{org_id}
 ### Client-Side Subscription
 
 ```typescript
-const { data } = useSubscription(ON_PARTICIPANT_UPDATED, {
+const { data, loading, error } = useSubscription(ON_PARTICIPANT_UPDATED, {
   variables: { networkId: "1" }
 });
 
+// Update UI when subscription receives update
 useEffect(() => {
   if (data?.participantUpdated) {
     queryClient.invalidateQueries(['participants', networkId]);
@@ -503,6 +504,73 @@ useEffect(() => {
   }
 }, [data]);
 ```
+
+### Connection Status UI
+
+**Instead of "Last synced: X minutes ago"**, show real-time connection status:
+
+```typescript
+// useConnectionStatus hook
+function useConnectionStatus() {
+  const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
+
+  useEffect(() => {
+    const client = getApolloClient();
+
+    // Monitor WebSocket connection state
+    client.on('connected', () => setStatus('connected'));
+    client.on('reconnecting', () => setStatus('connecting'));
+    client.on('disconnected', () => setStatus('disconnected'));
+
+    return () => client.removeAllListeners();
+  }, []);
+
+  return status;
+}
+
+// UI Component
+function ConnectionIndicator() {
+  const status = useConnectionStatus();
+
+  return (
+    <div className="connection-status">
+      {status === 'connected' && (
+        <>
+          <span className="status-dot pulsing" />
+          <span>Connected</span>
+        </>
+      )}
+      {status === 'connecting' && (
+        <>
+          <span className="status-dot loading" />
+          <span>Connecting...</span>
+        </>
+      )}
+      {status === 'disconnected' && (
+        <>
+          <span className="status-dot offline" />
+          <span>Disconnected</span>
+          <button onClick={reconnect}>
+            <i className="fas fa-sync-alt" /> Reconnect
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+**UI States**:
+1. **Connected** 🟢 - Green pulsing dot - WebSocket active, receiving real-time updates
+2. **Connecting** 🟡 - Yellow loading dot - Attempting connection/reconnection
+3. **Disconnected** 🔴 - Red dot + Reconnect button - No real-time updates, show refresh option
+
+**No "Last Synced" needed** - If connected, data is always current via subscriptions
+
+**Automatic Reconnection**:
+- Apollo Client handles reconnection automatically
+- Exponential backoff: 1s, 2s, 4s, 8s, 16s (max)
+- On reconnect: Re-execute active subscriptions + invalidate queries
 
 ---
 
@@ -778,9 +846,49 @@ Human review & confirmation in UI
 
 ---
 
-## Recommended Architecture: Hybrid with Snowflake Matching
+## Recommended Architecture: Phased Hybrid Approach
 
-### Data Flow Diagram
+### Phase 1: Internal Members Only (MVP)
+
+**Scope**: Network members are all Apricot tenants with DSF views
+
+```
+Network Document Folder API
+  ↓
+Query all member DSF views (in parallel)
+  ↓
+Aggregate & cache results (Redis, 5-min TTL)
+  ↓
+Background Job: Sync to Impact Hub matching workspace
+  ↓
+Run Impact Hub similarity matching
+  ↓
+Store potential matches
+  ↓
+Real-time updates via GraphQL subscriptions
+```
+
+**No Snowflake dependency needed for Phase 1!**
+
+### Phase 2: Add External Member Support (Future)
+
+**Scope**: Add network members whose data is in Impact Hub (not Apricot DSF views)
+
+```
+Network Document Folder API
+  ↓
+For each member:
+  - IF internal: Query DSF view (Postgres)
+  - IF external: Query Impact Hub view (Snowflake)
+  ↓
+Aggregate results
+  ↓
+Same matching/caching/subscription flow
+```
+
+**Key Insight**: External orgs still have Apricot org_id (for auth/permissions), but their participant data lives in Impact Hub, not in Apricot's data_N tables.
+
+### Data Flow Diagram (Phase 1 - MVP)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
