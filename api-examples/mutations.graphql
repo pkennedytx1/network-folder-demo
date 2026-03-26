@@ -1,0 +1,763 @@
+# ============================================================================
+# Network Document Folder - GraphQL Mutations
+# ============================================================================
+# Complete reference for all mutation operations in the Network Document Folder
+
+# ============================================================================
+# PARTICIPANT MUTATIONS
+# ============================================================================
+
+# Confirm a potential participant match
+mutation ConfirmParticipantMatch(
+  $networkId: ID!
+  $participantId: ID!
+  $sourceIds: [ID!]!
+) {
+  confirmParticipantMatch(
+    network_id: $networkId
+    participant_id: $participantId
+    source_ids: $sourceIds
+  ) {
+    id
+    match_status
+    match_confidence_score
+    confirmed_at
+    confirmed_by_user_id
+
+    sources {
+      id
+      org_id
+      org_name
+      document_id
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "participantId": "4",
+#   "sourceIds": ["101", "102"]
+# }
+
+# ----------------------------------------------------------------------------
+
+# Reject a potential match
+mutation RejectParticipantMatch(
+  $networkId: ID!
+  $participantId: ID!
+  $sourceId: ID!
+  $reason: String
+) {
+  rejectParticipantMatch(
+    network_id: $networkId
+    participant_id: $participantId
+    source_id: $sourceId
+    reason: $reason
+  ) {
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "participantId": "4",
+#   "sourceId": "105",
+#   "reason": "Different people confirmed by staff from both orgs"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Flag match as needing more information
+mutation FlagMatchNeedsReview(
+  $networkId: ID!
+  $matchId: ID!
+  $notes: String
+) {
+  flagMatchNeedsReview(
+    network_id: $networkId
+    match_id: $matchId
+    notes: $notes
+  ) {
+    id
+    status
+    reviewed_at
+    review_notes
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "matchId": "789",
+#   "notes": "Need to verify with both orgs - DOB discrepancy may be data entry error"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Manually link two participants (admin override)
+mutation ManuallyLinkParticipants(
+  $networkId: ID!
+  $participantAId: ID!
+  $participantBId: ID!
+  $reason: String!
+) {
+  manuallyLinkParticipants(
+    network_id: $networkId
+    participant_a_id: $participantAId
+    participant_b_id: $participantBId
+    reason: $reason
+  ) {
+    merged_participant {
+      id
+      sources {
+        org_id
+        org_name
+        document_id
+      }
+      match_status
+      confirmed_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "participantAId": "10",
+#   "participantBId": "11",
+#   "reason": "Confirmed same person via case worker verification - legal name change"
+# }
+
+# ============================================================================
+# INCIDENT MUTATIONS
+# ============================================================================
+
+# Create a new network incident
+mutation CreateNetworkIncident($networkId: ID!, $input: IncidentInput!) {
+  createNetworkIncident(network_id: $networkId, input: $input) {
+    id
+    network_id
+    incident_type
+    severity
+    status
+    location
+    occurred_at
+    reported_by_org_id
+    title
+    description
+    tags
+    created_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "input": {
+#     "incident_type": "shooting",
+#     "severity": "critical",
+#     "status": "active",
+#     "location": "4100 W. Lake St",
+#     "occurred_at": "2025-03-24T02:15:00Z",
+#     "title": "Early morning shooting - Lake St",
+#     "description": "Shooting just occurred. Multiple shots fired. Area extremely volatile.",
+#     "tags": ["shooting", "active", "high_priority"],
+#     "participant_ids": [3, 9],
+#     "participant_roles": {
+#       "3": "at_risk",
+#       "9": "witness"
+#     }
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Update org's response to an incident
+mutation UpdateOrgResponse(
+  $networkId: ID!
+  $incidentId: ID!
+  $orgId: ID!
+  $input: OrgResponseInput!
+) {
+  updateOrgResponse(
+    network_id: $networkId
+    incident_id: $incidentId
+    org_id: $orgId
+    input: $input
+  ) {
+    id
+    org_id
+    org_name
+    status
+    planned_actions
+    current_actions
+    completed_actions
+    updated_at
+    last_updated_by_user_id
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "incidentId": "5",
+#   "orgId": "101",
+#   "input": {
+#     "status": "in_progress",
+#     "current_actions": [
+#       "Emergency response coordination",
+#       "Hospital outreach"
+#     ],
+#     "completed_actions": [
+#       "Initial assessment",
+#       "Notification to network"
+#     ]
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Link participant to incident
+mutation LinkParticipantToIncident(
+  $incidentId: ID!
+  $participantId: ID!
+  $role: ParticipantRole!
+  $notes: String
+) {
+  linkParticipantToIncident(
+    incident_id: $incidentId
+    participant_id: $participantId
+    role: $role
+    notes: $notes
+  ) {
+    id
+    incident_id
+    participant_id
+    role
+    notes
+  }
+}
+
+# Variables example:
+# {
+#   "incidentId": "1",
+#   "participantId": "3",
+#   "role": "victim",
+#   "notes": "Shot in leg, non-life-threatening"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Update incident status
+mutation UpdateIncidentStatus(
+  $networkId: ID!
+  $incidentId: ID!
+  $status: String!
+  $notes: String
+) {
+  updateIncidentStatus(
+    network_id: $networkId
+    incident_id: $incidentId
+    status: $status
+    notes: $notes
+  ) {
+    id
+    status
+    updated_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "incidentId": "3",
+#   "status": "resolved",
+#   "notes": "Both parties agreed to informal truce. Mediation successful."
+# }
+
+# ----------------------------------------------------------------------------
+
+# Import incident to local org database
+mutation ImportIncidentToOrg(
+  $networkId: ID!
+  $incidentId: ID!
+  $orgId: ID!
+  $formId: Int!
+) {
+  importIncidentToOrg(
+    network_id: $networkId
+    incident_id: $incidentId
+    org_id: $orgId
+    form_id: $formId
+  ) {
+    local_document_id
+    network_incident_id
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "incidentId": "5",
+#   "orgId": "102",
+#   "formId": 25
+# }
+
+# ============================================================================
+# REFERRAL MUTATIONS
+# ============================================================================
+
+# Create cross-org referral
+mutation CreateReferral($networkId: ID!, $input: ReferralInput!) {
+  createReferral(network_id: $networkId, input: $input) {
+    id
+    network_id
+    participant_id
+    from_org_id
+    from_org_name
+    to_org_id
+    to_org_name
+    reason
+    services_requested
+    urgency
+    status
+    created_at
+    created_by_user_id
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "input": {
+#     "participant_id": "1",
+#     "to_org_id": "106",
+#     "reason": "Client needs long-term case management and employment support. Ready to engage with services.",
+#     "services_requested": "Case management, employment assistance, life skills training",
+#     "urgency": "routine"
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Accept referral
+mutation AcceptReferral(
+  $networkId: ID!
+  $referralId: ID!
+  $responseNotes: String
+) {
+  acceptReferral(
+    network_id: $networkId
+    referral_id: $referralId
+    response_notes: $responseNotes
+  ) {
+    id
+    status
+    accepted_at
+    accepted_by_user_id
+    response_notes
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "referralId": "2",
+#   "responseNotes": "Accepted. Will reach out to client this week to schedule intake."
+# }
+
+# ----------------------------------------------------------------------------
+
+# Decline referral
+mutation DeclineReferral(
+  $networkId: ID!
+  $referralId: ID!
+  $declinedReason: String!
+) {
+  declineReferral(
+    network_id: $networkId
+    referral_id: $referralId
+    declined_reason: $declinedReason
+  ) {
+    id
+    status
+    declined_reason
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "referralId": "5",
+#   "declinedReason": "Client is already connected with our team through another program."
+# }
+
+# ----------------------------------------------------------------------------
+
+# Update referral status
+mutation UpdateReferralStatus(
+  $networkId: ID!
+  $referralId: ID!
+  $status: String!
+  $notes: String
+) {
+  updateReferralStatus(
+    network_id: $networkId
+    referral_id: $referralId
+    status: $status
+    notes: $notes
+  ) {
+    id
+    status
+    updated_at
+    completed_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "referralId": "1",
+#   "status": "completed",
+#   "notes": "Client successfully transitioned to case management. Meeting regularly."
+# }
+
+# ============================================================================
+# NOTE MUTATIONS
+# ============================================================================
+
+# Create network note
+mutation CreateNetworkNote($networkId: ID!, $input: NoteInput!) {
+  createNetworkNote(network_id: $networkId, input: $input) {
+    id
+    network_id
+    author_org_id
+    author_user_id
+    content
+    note_type
+    related_participant_id
+    related_incident_id
+    created_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "input": {
+#     "content": "Marcus has been responsive to outreach. Good candidate for employment program referral.",
+#     "note_type": "coordination",
+#     "related_participant_id": "1"
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Update note
+mutation UpdateNetworkNote(
+  $networkId: ID!
+  $noteId: ID!
+  $content: String!
+) {
+  updateNetworkNote(
+    network_id: $networkId
+    note_id: $noteId
+    content: $content
+  ) {
+    id
+    content
+    updated_at
+    edited
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "noteId": "456",
+#   "content": "Updated: Marcus completed employment program intake. Start date scheduled."
+# }
+
+# ----------------------------------------------------------------------------
+
+# Delete note (soft delete)
+mutation DeleteNetworkNote($networkId: ID!, $noteId: ID!) {
+  deleteNetworkNote(network_id: $networkId, note_id: $noteId) {
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "noteId": "789"
+# }
+
+# ============================================================================
+# PII SETTINGS MUTATIONS
+# ============================================================================
+
+# Update org's PII sharing settings
+mutation UpdatePIISettings($networkId: ID!, $input: PIISettingsInput!) {
+  updateNetworkPIISettings(network_id: $networkId, input: $input) {
+    org_id
+    pii_sharing_enabled
+    fields_shared
+    consent_confirmed_at
+    consent_confirmed_by_user_id
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "input": {
+#     "pii_sharing_enabled": true,
+#     "fields_shared": ["name", "dob", "address", "phone"]
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Revoke PII consent (emergency stop)
+mutation RevokePIIConsent($networkId: ID!, $orgId: ID!) {
+  revokePIIConsent(network_id: $networkId, org_id: $orgId) {
+    success
+    message
+    cache_cleared
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "orgId": "103"
+# }
+
+# ============================================================================
+# ADMIN MUTATIONS
+# ============================================================================
+
+# Run matching algorithm manually (admin only)
+mutation RunMatchingAlgorithm(
+  $networkId: ID!
+  $participantSourceId: ID
+  $force: Boolean
+) {
+  runMatchingAlgorithm(
+    network_id: $networkId
+    participant_source_id: $participantSourceId
+    force: $force
+  ) {
+    job_id
+    status
+    message
+    estimated_completion
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "force": false
+# }
+
+# ----------------------------------------------------------------------------
+
+# Clear network cache (admin only)
+mutation ClearNetworkCache($networkId: ID!, $cacheType: String) {
+  clearNetworkCache(network_id: $networkId, cache_type: $cacheType) {
+    success
+    keys_cleared
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "cacheType": "participants"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Unlink participant sources (undo incorrect match)
+mutation UnlinkParticipantSources(
+  $networkId: ID!
+  $participantId: ID!
+  $sourceId: ID!
+  $reason: String!
+) {
+  unlinkParticipantSources(
+    network_id: $networkId
+    participant_id: $participantId
+    source_id: $sourceId
+    reason: $reason
+  ) {
+    success
+    new_participant_id
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "participantId": "3",
+#   "sourceId": "106",
+#   "reason": "Incorrect match - confirmed different person by case manager"
+# }
+
+# ============================================================================
+# SUBSCRIPTION-RELATED MUTATIONS
+# ============================================================================
+
+# Mark notification as read
+mutation MarkNotificationRead($notificationId: ID!) {
+  markNotificationRead(notification_id: $notificationId) {
+    success
+  }
+}
+
+# Variables example:
+# {
+#   "notificationId": "12345"
+# }
+
+# ============================================================================
+# COMPLEX MUTATIONS (Multi-Step Operations)
+# ============================================================================
+
+# Create incident and auto-notify all orgs
+mutation CreateIncidentWithNotifications(
+  $networkId: ID!
+  $incident: IncidentInput!
+  $notifyOrgs: [ID!]!
+  $urgencyLevel: String!
+) {
+  createIncidentWithNotifications(
+    network_id: $networkId
+    incident: $incident
+    notify_orgs: $notifyOrgs
+    urgency_level: $urgencyLevel
+  ) {
+    incident {
+      id
+      title
+      severity
+      created_at
+    }
+    notifications_sent {
+      org_id
+      org_name
+      sent_at
+    }
+    org_responses_created
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "incident": {
+#     "incident_type": "shooting",
+#     "severity": "critical",
+#     "title": "Critical incident - immediate response needed",
+#     "description": "...",
+#     "occurred_at": "2025-03-24T02:15:00Z"
+#   },
+#   "notifyOrgs": ["101", "102", "105"],
+#   "urgencyLevel": "immediate"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Accept referral and create local record in one step
+mutation AcceptReferralAndCreateRecord(
+  $networkId: ID!
+  $referralId: ID!
+  $responseNotes: String!
+  $createLocalRecord: Boolean!
+  $formId: Int
+) {
+  acceptReferralAndCreateRecord(
+    network_id: $networkId
+    referral_id: $referralId
+    response_notes: $responseNotes
+    create_local_record: $createLocalRecord
+    form_id: $formId
+  ) {
+    referral {
+      id
+      status
+      accepted_at
+    }
+    local_document {
+      id
+      form_id
+      created
+    }
+    success
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "referralId": "2",
+#   "responseNotes": "Accepted - creating case file",
+#   "createLocalRecord": true,
+#   "formId": 10
+# }
+
+# ============================================================================
+# INPUT TYPE DEFINITIONS (for reference)
+# ============================================================================
+
+# input IncidentInput {
+#   incident_type: String!
+#   severity: Severity!
+#   status: String
+#   location: String
+#   location_lat: Float
+#   location_lng: Float
+#   occurred_at: String!
+#   title: String!
+#   description: String
+#   tags: [String!]
+#   participant_ids: [ID!]
+#   participant_roles: JSON
+# }
+
+# input OrgResponseInput {
+#   status: ResponseStatus!
+#   planned_actions: [String!]
+#   current_actions: [String!]
+#   completed_actions: [String!]
+# }
+
+# input ReferralInput {
+#   participant_id: ID!
+#   to_org_id: ID!
+#   reason: String!
+#   services_requested: String
+#   urgency: ReferralUrgency!
+# }
+
+# input NoteInput {
+#   content: String!
+#   note_type: NoteType!
+#   related_participant_id: ID
+#   related_incident_id: ID
+# }
+
+# input PIISettingsInput {
+#   pii_sharing_enabled: Boolean!
+#   fields_shared: [String!]
+# }

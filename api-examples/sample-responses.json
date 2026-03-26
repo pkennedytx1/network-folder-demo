@@ -1,0 +1,620 @@
+{
+  "queries": {
+    "networkParticipants": {
+      "description": "Get all participants in network with PII filtering",
+      "query": "networkParticipants(network_id: \"1\", match_status: \"confirmed\", limit: 3)",
+      "response": {
+        "data": {
+          "networkParticipants": {
+            "total": 7,
+            "hasMore": true,
+            "participants": [
+              {
+                "id": "1",
+                "network_id": "1",
+                "match_status": "confirmed",
+                "match_confidence_score": 95.50,
+                "created_at": "2025-01-20T09:00:00Z",
+                "confirmed_at": "2025-02-01T10:30:00Z",
+                "sources": [
+                  {
+                    "id": "101",
+                    "org_id": "101",
+                    "org_name": "Lead Organization",
+                    "document_id": "5001",
+                    "dsf_id": "101",
+                    "name_used": "Marcus Thompson",
+                    "ssn_last4": "4521",
+                    "dob": "1998-03-15",
+                    "contributed_at": "2025-01-20T09:00:00Z"
+                  },
+                  {
+                    "id": "102",
+                    "org_id": "102",
+                    "org_name": "Violence Prevention Coalition",
+                    "document_id": "3245",
+                    "dsf_id": "102",
+                    "name_used": "Marcus A. Thompson",
+                    "ssn_last4": "4521",
+                    "dob": "1998-03-15",
+                    "contributed_at": "2025-01-22T14:00:00Z"
+                  },
+                  {
+                    "id": "105",
+                    "org_id": "105",
+                    "org_name": "Street Outreach Team",
+                    "document_id": "7821",
+                    "dsf_id": "105",
+                    "name_used": "Marc Thompson",
+                    "ssn_last4": null,
+                    "dob": "1998-03-15",
+                    "contributed_at": "2025-01-25T11:30:00Z"
+                  }
+                ]
+              },
+              {
+                "id": "2",
+                "network_id": "1",
+                "match_status": "confirmed",
+                "match_confidence_score": 98.00,
+                "created_at": "2025-01-21T10:00:00Z",
+                "confirmed_at": "2025-02-03T15:00:00Z",
+                "sources": [
+                  {
+                    "id": "201",
+                    "org_id": "101",
+                    "org_name": "Lead Organization",
+                    "document_id": "5002",
+                    "dsf_id": "101",
+                    "name_used": "Jasmine Rodriguez",
+                    "ssn_last4": "7834",
+                    "dob": "2001-07-22",
+                    "contributed_at": "2025-01-21T10:00:00Z"
+                  },
+                  {
+                    "id": "203",
+                    "org_id": "103",
+                    "org_name": "Community Outreach Partners",
+                    "document_id": "4567",
+                    "dsf_id": "103",
+                    "name_used": "Jasmine M. Rodriguez",
+                    "ssn_last4": "7834",
+                    "dob": "2001-07-22",
+                    "contributed_at": "2025-01-28T09:30:00Z"
+                  }
+                ]
+              },
+              {
+                "id": "3",
+                "network_id": "1",
+                "match_status": "confirmed",
+                "match_confidence_score": 97.25,
+                "created_at": "2025-01-19T08:00:00Z",
+                "confirmed_at": "2025-02-05T11:00:00Z",
+                "sources": [
+                  {
+                    "id": "301",
+                    "org_id": "101",
+                    "org_name": "Lead Organization",
+                    "document_id": "5003",
+                    "dsf_id": "101",
+                    "name_used": "Deandre Williams",
+                    "ssn_last4": "9201",
+                    "dob": "1999-11-08",
+                    "contributed_at": "2025-01-19T08:00:00Z"
+                  },
+                  {
+                    "id": "302",
+                    "org_id": "102",
+                    "org_name": "Violence Prevention Coalition",
+                    "document_id": "3246",
+                    "dsf_id": "102",
+                    "name_used": "DeAndre Williams",
+                    "ssn_last4": "9201",
+                    "dob": "1999-11-08",
+                    "contributed_at": "2025-01-20T13:00:00Z"
+                  },
+                  {
+                    "id": "305",
+                    "org_id": "105",
+                    "org_name": "Street Outreach Team",
+                    "document_id": "7822",
+                    "dsf_id": "105",
+                    "name_used": "Deandre \"Dre\" Williams",
+                    "ssn_last4": null,
+                    "dob": "1999-11-08",
+                    "contributed_at": "2025-01-23T16:00:00Z"
+                  },
+                  {
+                    "id": "306",
+                    "org_id": "106",
+                    "org_name": "Case Management Services",
+                    "document_id": "9104",
+                    "dsf_id": "106",
+                    "name_used": "D. Williams",
+                    "ssn_last4": "9201",
+                    "dob": "1999-11-08",
+                    "contributed_at": "2025-02-01T10:00:00Z"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+
+    "networkParticipants_piiMasked": {
+      "description": "Same query from org without PII permissions - shows masked data",
+      "query": "networkParticipants(network_id: \"1\", match_status: \"confirmed\", limit: 1)",
+      "requesting_org": "104 (Youth Services - no PII sharing)",
+      "response": {
+        "data": {
+          "networkParticipants": {
+            "total": 7,
+            "hasMore": true,
+            "participants": [
+              {
+                "id": "1",
+                "network_id": "1",
+                "match_status": "confirmed",
+                "match_confidence_score": 95.50,
+                "created_at": "2025-01-20T09:00:00Z",
+                "confirmed_at": "2025-02-01T10:30:00Z",
+                "sources": [
+                  {
+                    "id": "101",
+                    "org_id": "101",
+                    "org_name": "Lead Organization",
+                    "document_id": "5001",
+                    "dsf_id": "101",
+                    "name_used": "● ● ● ● (PII masked)",
+                    "ssn_last4": "● ● ● ●",
+                    "dob": "● ● ● ●",
+                    "contributed_at": "2025-01-20T09:00:00Z"
+                  },
+                  {
+                    "id": "102",
+                    "org_id": "102",
+                    "org_name": "Violence Prevention Coalition",
+                    "document_id": "3245",
+                    "dsf_id": "102",
+                    "name_used": "● ● ● ● (PII masked)",
+                    "ssn_last4": "● ● ● ●",
+                    "dob": "● ● ● ●",
+                    "contributed_at": "2025-01-22T14:00:00Z"
+                  },
+                  {
+                    "id": "105",
+                    "org_id": "105",
+                    "org_name": "Street Outreach Team",
+                    "document_id": "7821",
+                    "dsf_id": "105",
+                    "name_used": "● ● ● ● (PII masked)",
+                    "ssn_last4": null,
+                    "dob": "● ● ● ●",
+                    "contributed_at": "2025-01-25T11:30:00Z"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+
+    "networkIncident": {
+      "description": "Get single incident with full details",
+      "query": "networkIncident(network_id: \"1\", incident_id: \"1\")",
+      "response": {
+        "data": {
+          "networkIncident": {
+            "id": "1",
+            "network_id": "1",
+            "incident_type": "shooting",
+            "severity": "critical",
+            "status": "active",
+            "location": "3400 W. Chicago Ave",
+            "occurred_at": "2025-03-15T21:30:00Z",
+            "reported_by_org_id": "101",
+            "reported_by_org_name": "Lead Organization",
+            "reported_by_user_id": "1001",
+            "reported_by_user_name": "John Smith",
+            "title": "Shooting on W. Chicago Ave - 1 victim",
+            "description": "Drive-by shooting near commercial district. One victim transported to hospital. Witnesses report ongoing gang conflict.",
+            "tags": ["gang_related", "retaliation", "firearms"],
+            "involved_participants": [
+              {
+                "id": "1",
+                "participant_id": "3",
+                "role": "victim",
+                "notes": "Shot in leg, non-life-threatening",
+                "participant": {
+                  "id": "3",
+                  "sources": [
+                    {
+                      "org_name": "Lead Organization",
+                      "name_used": "Deandre Williams"
+                    },
+                    {
+                      "org_name": "Violence Prevention Coalition",
+                      "name_used": "DeAndre Williams"
+                    },
+                    {
+                      "org_name": "Street Outreach Team",
+                      "name_used": "Deandre \"Dre\" Williams"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "2",
+                "participant_id": "1",
+                "role": "witness",
+                "notes": "Was present at scene, gave statement to police",
+                "participant": {
+                  "id": "1",
+                  "sources": [
+                    {
+                      "org_name": "Lead Organization",
+                      "name_used": "Marcus Thompson"
+                    }
+                  ]
+                }
+              }
+            ],
+            "org_responses": [
+              {
+                "id": "1",
+                "org_id": "101",
+                "org_name": "Lead Organization",
+                "status": "in_progress",
+                "planned_actions": [
+                  "Hospital outreach",
+                  "Family contact",
+                  "Conflict mediation",
+                  "Coordinate with law enforcement"
+                ],
+                "current_actions": [
+                  "Hospital outreach",
+                  "Family contact"
+                ],
+                "completed_actions": [
+                  "Initial assessment",
+                  "Notification to network"
+                ],
+                "local_incident_document_id": null,
+                "updated_at": "2025-03-16T08:00:00Z",
+                "last_updated_by_user_id": "1001",
+                "last_updated_by_user_name": "John Smith"
+              },
+              {
+                "id": "2",
+                "org_id": "102",
+                "org_name": "Violence Prevention Coalition",
+                "status": "in_progress",
+                "planned_actions": [
+                  "Street outreach to affected areas",
+                  "Intelligence gathering",
+                  "Mediation offer"
+                ],
+                "current_actions": [
+                  "Street outreach to affected areas"
+                ],
+                "completed_actions": [
+                  "Team deployed"
+                ],
+                "local_incident_document_id": null,
+                "updated_at": "2025-03-15T23:00:00Z",
+                "last_updated_by_user_id": "1002",
+                "last_updated_by_user_name": "Sarah Johnson"
+              },
+              {
+                "id": "3",
+                "org_id": "105",
+                "org_name": "Street Outreach Team",
+                "status": "in_progress",
+                "planned_actions": [
+                  "24/7 presence in area",
+                  "Intel sharing",
+                  "Victim support"
+                ],
+                "current_actions": [
+                  "24/7 presence in area",
+                  "Victim support"
+                ],
+                "completed_actions": [
+                  "Initial scene response"
+                ],
+                "local_incident_document_id": null,
+                "updated_at": "2025-03-15T22:00:00Z",
+                "last_updated_by_user_id": "1005",
+                "last_updated_by_user_name": "Mike Rodriguez"
+              }
+            ],
+            "notes": [
+              {
+                "id": "1",
+                "author_org_name": "Lead Organization",
+                "author_user_name": "John Smith",
+                "content": "Hospital reports victim is stable and cooperative. Family wants to meet with us.",
+                "created_at": "2025-03-16T08:00:00Z"
+              },
+              {
+                "id": "2",
+                "author_org_name": "Street Outreach Team",
+                "author_user_name": "Mike Rodriguez",
+                "content": "Street intel suggests this is retaliation for earlier incident. Tensions remain high in area.",
+                "created_at": "2025-03-16T16:00:00Z"
+              }
+            ],
+            "created_at": "2025-03-15T21:35:00Z",
+            "updated_at": "2025-03-16T16:00:00Z"
+          }
+        }
+      }
+    },
+
+    "networkDashboard": {
+      "description": "Dashboard query for network home page",
+      "query": "getNetworkDashboard(network_id: \"1\")",
+      "response": {
+        "data": {
+          "network": {
+            "id": "1",
+            "name": "Chicago West Side CVI Network",
+            "recentIncidents": [
+              {
+                "id": "5",
+                "title": "Early morning shooting - Lake St",
+                "severity": "critical",
+                "status": "active",
+                "occurred_at": "2025-03-24T02:15:00Z",
+                "reported_by_org_name": "Street Outreach Team"
+              },
+              {
+                "id": "1",
+                "title": "Shooting on W. Chicago Ave - 1 victim",
+                "severity": "critical",
+                "status": "active",
+                "occurred_at": "2025-03-15T21:30:00Z",
+                "reported_by_org_name": "Lead Organization"
+              }
+            ],
+            "potentialMatches": [
+              {
+                "id": "1",
+                "match_score": 78.50,
+                "participant_a": {
+                  "sources": [
+                    {
+                      "org_name": "Violence Prevention Coalition",
+                      "name_used": "Tyrell Jenkins"
+                    }
+                  ]
+                },
+                "participant_b": {
+                  "sources": [
+                    {
+                      "org_name": "Street Outreach Team",
+                      "name_used": "Tyrel Jenkins"
+                    }
+                  ]
+                }
+              }
+            ],
+            "pendingReferrals": [
+              {
+                "id": "2",
+                "from_org_name": "Community Outreach Partners",
+                "participant": {
+                  "sources": [
+                    { "name_used": "Jasmine Rodriguez" }
+                  ]
+                },
+                "urgency": "routine",
+                "created_at": "2025-03-18T09:00:00Z"
+              }
+            ],
+            "recentNotes": [
+              {
+                "id": "8",
+                "author_org_name": "Lead Organization",
+                "content": "Network meeting scheduled for Friday 3/28 at 10am. Will discuss recent uptick in shootings.",
+                "note_type": "general",
+                "created_at": "2025-03-20T15:00:00Z"
+              },
+              {
+                "id": "5",
+                "author_org_name": "Street Outreach Team",
+                "content": "Deandre is at high risk. Multiple associates recently arrested. Increasing street presence around him.",
+                "note_type": "alert",
+                "created_at": "2025-03-12T14:30:00Z"
+              }
+            ],
+            "statistics": {
+              "total_participants": 10,
+              "active_incidents": 2,
+              "pending_referrals": 1
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "mutations": {
+    "confirmParticipantMatch": {
+      "description": "Confirm a potential match",
+      "mutation": "confirmParticipantMatch",
+      "variables": {
+        "networkId": "1",
+        "participantId": "4",
+        "sourceIds": ["401", "405"]
+      },
+      "response": {
+        "data": {
+          "confirmParticipantMatch": {
+            "id": "4",
+            "match_status": "confirmed",
+            "match_confidence_score": 78.50,
+            "confirmed_at": "2025-03-24T14:30:00Z",
+            "confirmed_by_user_id": "1001",
+            "sources": [
+              {
+                "id": "401",
+                "org_id": "102",
+                "org_name": "Violence Prevention Coalition",
+                "document_id": "3247"
+              },
+              {
+                "id": "405",
+                "org_id": "105",
+                "org_name": "Street Outreach Team",
+                "document_id": "7823"
+              }
+            ]
+          }
+        }
+      }
+    },
+
+    "createNetworkIncident": {
+      "description": "Create new incident",
+      "mutation": "createNetworkIncident",
+      "variables": {
+        "networkId": "1",
+        "input": {
+          "incident_type": "assault",
+          "severity": "high",
+          "status": "active",
+          "location": "3500 W. Madison St",
+          "occurred_at": "2025-03-24T16:00:00Z",
+          "title": "Assault near community center",
+          "description": "Physical altercation between two individuals. Mediation needed.",
+          "tags": ["assault", "mediation_needed"]
+        }
+      },
+      "response": {
+        "data": {
+          "createNetworkIncident": {
+            "id": "6",
+            "network_id": "1",
+            "incident_type": "assault",
+            "severity": "high",
+            "status": "active",
+            "location": "3500 W. Madison St",
+            "occurred_at": "2025-03-24T16:00:00Z",
+            "reported_by_org_id": "102",
+            "title": "Assault near community center",
+            "description": "Physical altercation between two individuals. Mediation needed.",
+            "tags": ["assault", "mediation_needed"],
+            "created_at": "2025-03-24T16:05:00Z"
+          }
+        }
+      }
+    },
+
+    "createReferral": {
+      "description": "Create cross-org referral",
+      "mutation": "createReferral",
+      "variables": {
+        "networkId": "1",
+        "input": {
+          "participant_id": "1",
+          "to_org_id": "106",
+          "reason": "Client needs long-term case management and employment support.",
+          "services_requested": "Case management, employment assistance",
+          "urgency": "routine"
+        }
+      },
+      "response": {
+        "data": {
+          "createReferral": {
+            "id": "6",
+            "network_id": "1",
+            "participant_id": "1",
+            "from_org_id": "101",
+            "from_org_name": "Lead Organization",
+            "to_org_id": "106",
+            "to_org_name": "Case Management Services",
+            "reason": "Client needs long-term case management and employment support.",
+            "services_requested": "Case management, employment assistance",
+            "urgency": "routine",
+            "status": "pending",
+            "created_at": "2025-03-24T16:10:00Z",
+            "created_by_user_id": "1001"
+          }
+        }
+      }
+    }
+  },
+
+  "subscriptions": {
+    "participantUpdated": {
+      "description": "Real-time participant update",
+      "subscription": "participantUpdated",
+      "event": {
+        "data": {
+          "participantUpdated": {
+            "participant": {
+              "id": "1",
+              "network_id": "1",
+              "match_status": "confirmed",
+              "match_confidence_score": 95.50,
+              "sources": [
+                {
+                  "id": "101",
+                  "org_id": "101",
+                  "org_name": "Lead Organization",
+                  "document_id": "5001",
+                  "name_used": "Marcus Thompson",
+                  "dob": "1998-03-15",
+                  "ssn_last4": "4521"
+                }
+              ]
+            },
+            "change_type": "UPDATED",
+            "changed_by_org_id": "101",
+            "changed_by_org_name": "Lead Organization",
+            "changed_at": "2025-03-24T16:15:00Z"
+          }
+        }
+      }
+    },
+
+    "incidentUpdated": {
+      "description": "Real-time incident update",
+      "subscription": "incidentUpdated",
+      "event": {
+        "data": {
+          "incidentUpdated": {
+            "incident": {
+              "id": "1",
+              "network_id": "1",
+              "incident_type": "shooting",
+              "severity": "critical",
+              "status": "monitoring",
+              "title": "Shooting on W. Chicago Ave - 1 victim",
+              "description": "Drive-by shooting near commercial district. Victim stable.",
+              "occurred_at": "2025-03-15T21:30:00Z",
+              "reported_by_org_name": "Lead Organization",
+              "org_responses": [
+                {
+                  "org_id": "101",
+                  "org_name": "Lead Organization",
+                  "status": "in_progress",
+                  "current_actions": ["Hospital outreach", "Family support"]
+                }
+              ]
+            },
+            "change_type": "STATUS_CHANGED",
+            "changed_by_org_id": "101",
+            "changed_by_org_name": "Lead Organization",
+            "changed_at": "2025-03-24T16:20:00Z"
+          }
+        }
+      }
+    }
+  }
+}

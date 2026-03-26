@@ -1,0 +1,674 @@
+# ============================================================================
+# Network Document Folder - GraphQL Queries
+# ============================================================================
+# Complete reference for all query operations in the Network Document Folder
+
+# ============================================================================
+# PARTICIPANT QUERIES
+# ============================================================================
+
+# Get all participants in a network with filtering
+query GetNetworkParticipants($networkId: ID!, $matchStatus: MatchStatus, $limit: Int, $offset: Int) {
+  networkParticipants(
+    network_id: $networkId
+    match_status: $matchStatus
+    limit: $limit
+    offset: $offset
+  ) {
+    total
+    hasMore
+    participants {
+      id
+      network_id
+      match_status
+      match_confidence_score
+      created_at
+      confirmed_at
+
+      # Sources from multiple orgs
+      sources {
+        id
+        org_id
+        org_name
+        document_id
+        dsf_id
+
+        # PII fields (filtered based on requesting org's permissions)
+        name_used
+        ssn_last4
+        dob
+        address
+        phone
+
+        contributed_at
+        confirmed_by_org_user_id
+      }
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "matchStatus": "confirmed",
+#   "limit": 50,
+#   "offset": 0
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get single participant detail
+query GetNetworkParticipant($networkId: ID!, $participantId: ID!) {
+  networkParticipant(network_id: $networkId, participant_id: $participantId) {
+    id
+    network_id
+    match_status
+    match_confidence_score
+    created_at
+    confirmed_at
+    confirmed_by_user_id
+
+    sources {
+      id
+      org_id
+      org_name
+      document_id
+      form_id
+      dsf_id
+
+      # Full PII (if authorized)
+      name_used
+      ssn_last4
+      dob
+      address
+      phone
+      email
+
+      # Metadata
+      contributed_at
+      confirmed_by_org_user_id
+    }
+
+    # Related data
+    incidents {
+      id
+      incident_type
+      severity
+      status
+      occurred_at
+      role  # victim, aggressor, witness, at_risk
+    }
+
+    referrals {
+      id
+      from_org_id
+      from_org_name
+      to_org_id
+      to_org_name
+      reason
+      status
+      urgency
+      created_at
+    }
+
+    notes {
+      id
+      author_org_id
+      author_org_name
+      author_user_id
+      content
+      note_type
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "participantId": "123"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get potential matches needing review
+query GetPotentialMatches($networkId: ID!, $status: String) {
+  networkPotentialMatches(network_id: $networkId, status: $status) {
+    id
+    network_id
+    match_score
+    status
+    created_at
+
+    participant_a {
+      id
+      sources {
+        org_name
+        name_used
+        dob
+        ssn_last4
+      }
+    }
+
+    participant_b {
+      id
+      sources {
+        org_name
+        name_used
+        dob
+        ssn_last4
+      }
+    }
+
+    match_factors {
+      name_similarity
+      dob_match
+      ssn_match
+      address_partial
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "status": "pending_review"
+# }
+
+# ============================================================================
+# INCIDENT QUERIES
+# ============================================================================
+
+# Get all incidents in network
+query GetNetworkIncidents(
+  $networkId: ID!
+  $severity: Severity
+  $status: String
+  $limit: Int
+  $offset: Int
+) {
+  networkIncidents(
+    network_id: $networkId
+    severity: $severity
+    status: $status
+    limit: $limit
+    offset: $offset
+  ) {
+    total
+    hasMore
+    incidents {
+      id
+      network_id
+      incident_type
+      severity
+      status
+
+      # Location
+      location
+      location_lat
+      location_lng
+
+      # Timing
+      occurred_at
+
+      # Reporting
+      reported_by_org_id
+      reported_by_org_name
+      reported_by_user_id
+
+      # Content
+      title
+      description
+      tags
+
+      # Counts
+      participant_count
+      responding_org_count
+
+      created_at
+      updated_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "severity": "critical",
+#   "status": "active",
+#   "limit": 20,
+#   "offset": 0
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get single incident with full details
+query GetNetworkIncident($networkId: ID!, $incidentId: ID!) {
+  networkIncident(network_id: $networkId, incident_id: $incidentId) {
+    id
+    network_id
+    incident_type
+    severity
+    status
+    location
+    occurred_at
+
+    reported_by_org_id
+    reported_by_org_name
+    reported_by_user_id
+    reported_by_user_name
+
+    title
+    description
+    tags
+
+    # Involved participants
+    involved_participants {
+      id
+      participant_id
+      role  # victim, aggressor, witness, at_risk
+      notes
+
+      participant {
+        id
+        sources {
+          org_name
+          name_used  # PII filtered
+        }
+      }
+    }
+
+    # Org responses
+    org_responses {
+      id
+      org_id
+      org_name
+      status
+
+      planned_actions
+      current_actions
+      completed_actions
+
+      local_incident_document_id
+
+      updated_at
+      last_updated_by_user_id
+      last_updated_by_user_name
+    }
+
+    # Related notes
+    notes {
+      id
+      author_org_name
+      author_user_name
+      content
+      created_at
+    }
+
+    created_at
+    updated_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "incidentId": "456"
+# }
+
+# ============================================================================
+# REFERRAL QUERIES
+# ============================================================================
+
+# Get referrals for network (with filtering)
+query GetNetworkReferrals(
+  $networkId: ID!
+  $fromOrgId: ID
+  $toOrgId: ID
+  $status: String
+  $limit: Int
+) {
+  networkReferrals(
+    network_id: $networkId
+    from_org_id: $fromOrgId
+    to_org_id: $toOrgId
+    status: $status
+    limit: $limit
+  ) {
+    total
+    referrals {
+      id
+      network_id
+
+      participant_id
+      participant {
+        sources {
+          org_name
+          name_used  # Filtered by PII permissions
+        }
+      }
+
+      from_org_id
+      from_org_name
+      to_org_id
+      to_org_name
+
+      reason
+      services_requested
+      urgency
+      status
+
+      response_notes
+      declined_reason
+
+      created_at
+      accepted_at
+      completed_at
+
+      created_by_user_name
+      accepted_by_user_name
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "status": "pending",
+#   "limit": 50
+# }
+
+# ============================================================================
+# NOTES QUERIES
+# ============================================================================
+
+# Get network notes with optional filtering
+query GetNetworkNotes(
+  $networkId: ID!
+  $participantId: ID
+  $incidentId: ID
+  $noteType: String
+  $limit: Int
+) {
+  networkNotes(
+    network_id: $networkId
+    related_participant_id: $participantId
+    related_incident_id: $incidentId
+    note_type: $noteType
+    limit: $limit
+  ) {
+    total
+    notes {
+      id
+      network_id
+
+      author_org_id
+      author_org_name
+      author_user_id
+      author_user_name
+
+      content
+      note_type
+
+      related_participant_id
+      related_incident_id
+
+      created_at
+      updated_at
+      edited
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "noteType": "alert",
+#   "limit": 100
+# }
+
+# ============================================================================
+# SETTINGS & PERMISSIONS QUERIES
+# ============================================================================
+
+# Get PII sharing settings for network
+query GetNetworkPIISettings($networkId: ID!) {
+  networkPIISettings(network_id: $networkId) {
+    orgs {
+      org_id
+      org_name
+      pii_sharing_enabled
+      fields_shared
+      consent_confirmed_at
+      consent_confirmed_by_user_name
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get my org's permissions in network
+query GetMyNetworkPermissions($networkId: ID!) {
+  myNetworkPermissions(network_id: $networkId) {
+    org_id
+    org_name
+    role  # network_admin, network_member, network_viewer
+
+    can_view_participants
+    can_confirm_matches
+    can_create_incidents
+    can_create_referrals
+    can_view_pii_from_orgs
+
+    pii_fields_i_share
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# NETWORK METADATA QUERIES
+# ============================================================================
+
+# Get network overview
+query GetNetworkOverview($networkId: ID!) {
+  network(id: $networkId) {
+    id
+    name
+    description
+    lead_org_id
+    lead_org_name
+
+    member_orgs {
+      org_id
+      org_name
+      joined_at
+      pii_sharing_enabled
+    }
+
+    statistics {
+      total_participants
+      confirmed_matches
+      potential_matches
+      active_incidents
+      total_referrals
+      pending_referrals
+    }
+
+    created_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# AUDIT LOG QUERIES
+# ============================================================================
+
+# Get audit log for network (admin only)
+query GetNetworkAuditLog(
+  $networkId: ID!
+  $action: String
+  $resourceType: String
+  $userId: ID
+  $startDate: String
+  $endDate: String
+  $limit: Int
+) {
+  networkAuditLog(
+    network_id: $networkId
+    action: $action
+    resource_type: $resourceType
+    user_id: $userId
+    start_date: $startDate
+    end_date: $endDate
+    limit: $limit
+  ) {
+    total
+    entries {
+      id
+      user_id
+      user_name
+      org_id
+      org_name
+
+      action
+      resource_type
+      resource_id
+
+      pii_fields_accessed
+
+      ip_address
+      user_agent
+
+      metadata
+
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "action": "view_pii",
+#   "startDate": "2025-03-01",
+#   "endDate": "2025-03-24",
+#   "limit": 100
+# }
+
+# ============================================================================
+# COMPLEX QUERIES (Real-World Use Cases)
+# ============================================================================
+
+# Dashboard query - get everything for network home page
+query GetNetworkDashboard($networkId: ID!) {
+  network(id: $networkId) {
+    id
+    name
+
+    # Recent incidents (last 7 days)
+    recentIncidents: incidents(
+      limit: 5
+      occurred_after: "2025-03-17"
+    ) {
+      id
+      title
+      severity
+      status
+      occurred_at
+      reported_by_org_name
+    }
+
+    # Potential matches needing review
+    potentialMatches(status: "pending_review", limit: 10) {
+      id
+      match_score
+      participant_a {
+        sources { org_name, name_used }
+      }
+      participant_b {
+        sources { org_name, name_used }
+      }
+    }
+
+    # Pending referrals to my org
+    pendingReferrals: referrals(
+      to_org_id: "$MY_ORG_ID"
+      status: "pending"
+      limit: 5
+    ) {
+      id
+      from_org_name
+      participant {
+        sources { name_used }
+      }
+      urgency
+      created_at
+    }
+
+    # Recent network activity
+    recentNotes(limit: 10, note_type: ["alert", "coordination"]) {
+      id
+      author_org_name
+      content
+      note_type
+      created_at
+    }
+
+    statistics {
+      total_participants
+      active_incidents
+      pending_referrals
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Search participants by partial name (with PII filtering)
+query SearchParticipants($networkId: ID!, $searchTerm: String!) {
+  searchNetworkParticipants(
+    network_id: $networkId
+    search_term: $searchTerm
+  ) {
+    results {
+      id
+      match_status
+
+      # PII automatically filtered based on permissions
+      sources {
+        org_name
+        name_used
+        dob
+      }
+
+      # Show risk level
+      recent_incidents_count
+      active_referrals_count
+      last_activity_date
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "searchTerm": "Marcus"
+# }
