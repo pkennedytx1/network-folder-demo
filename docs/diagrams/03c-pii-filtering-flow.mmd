@@ -1,0 +1,68 @@
+%% Sequence Diagram: PII Filtering Flow
+%% Shows how PII is filtered based on org permissions
+
+sequenceDiagram
+    actor User as User (Org C)
+    participant React as React App
+    participant API as GraphQL API
+    participant NDF as NetworkDocumentFolderService
+    participant PII as NetworkPIIService
+    participant Redis as Redis Cache
+    participant DB as Database
+
+    Note over User,DB: User from Org C requests participant data
+
+    User->>React: View participant detail
+    React->>API: Query: networkParticipant<br/>(network_id: 1, participant_id: 42)
+
+    API->>NDF: getParticipantDetail()
+    NDF->>DB: Query network_participant<br/>JOIN network_participant_sources
+
+    DB-->>NDF: Participant with sources from:<br/>- Org A (full PII)<br/>- Org B (partial PII)<br/>- Org C (no PII sharing)
+
+    Note over NDF: Determine requesting org
+
+    NDF->>NDF: Get requesting org_id from context<br/>(Org C)
+
+    NDF->>PII: getPIIPermissions(network_id: 1)
+    PII->>Redis: Check cache:<br/>network:1:pii_permissions
+
+    alt Cache Hit
+        Redis-->>PII: Return cached permissions
+    else Cache Miss
+        PII->>DB: Query network_pii_settings<br/>WHERE network_id = 1
+        DB-->>PII: PII settings for all orgs
+        PII->>PII: Build permissions map:<br/>Org A: [name, dob, ssn_last4]<br/>Org B: [name, dob]<br/>Org C: []
+        PII->>Redis: Cache (TTL: 1 hour)
+        Redis-->>PII: Cached
+    end
+
+    PII-->>NDF: Return permissions map
+
+    loop For each participant source
+        alt Source is from requesting org (Org C)
+            NDF->>NDF: Show all fields<br/>(can see own data)
+        else Source from org with PII sharing
+            NDF->>PII: filterPIIFields(source, permissions)
+
+            alt Org A shares full PII
+                PII->>PII: Return:<br/>name: "Marcus Johnson"<br/>dob: "1995-03-15"<br/>ssn_last4: "4729"
+            else Org B shares partial PII
+                PII->>PII: Return:<br/>name: "Marcus Johnson"<br/>dob: "1995-03-15"<br/>ssn_last4: null (masked)
+            else Org C shares no PII
+                PII->>PII: Return:<br/>name: "● ● ● (PII masked)"<br/>dob: null<br/>ssn_last4: null
+            end
+
+            PII-->>NDF: Filtered source data
+        end
+    end
+
+    Note over NDF,DB: Log PII access for audit
+
+    NDF->>DB: Insert into network_audit_log<br/>{user_id, org_id, action: 'view_participant',<br/>pii_accessed: ['name', 'dob'], ip_address}
+
+    NDF-->>API: Return filtered participant data
+    API-->>React: Participant with appropriate PII masking
+    React-->>User: Display:<br/>- Org A source: Full PII visible<br/>- Org B source: Name + DOB visible<br/>- Org C source: All PII masked
+
+    Note over User,DB: Privacy preserved across organizational boundaries

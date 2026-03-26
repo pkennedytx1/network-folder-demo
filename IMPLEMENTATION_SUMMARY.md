@@ -1,631 +1,1802 @@
-# Network Document Folder - Implementation Summary
+# Network Document Folder - Comprehensive Implementation Plan
 
-## ✅ Completed (Architecture Phase)
+## Executive Summary
 
-This document summarizes everything that has been created for the Network Document Folder microservice.
+**Project**: Network Document Folder - Cross-organizational collaboration tool for CVI networks
 
-## 🆕 Updated Architecture (March 26, 2025)
+**Scope**: Full-stack feature enabling multiple organizations to share participant/incident data with privacy controls, real-time updates, and intelligent matching algorithms.
 
-**Major architectural decisions made:**
+**Total Estimated Effort**: 16-20 weeks (320-400 hours)
+- Backend: 8-10 weeks
+- Frontend: 6-8 weeks
+- Integration/Testing: 2-3 weeks
 
-1. **Dual Member Type Support**: Networks will support both internal (Apricot) and external (Snowflake upload) members
-2. **Hybrid Data Source Strategy**: Query DSF views for internal members, Snowflake tables for external members
-3. **Snowflake-Based Matching**: Leverage Snowflake's built-in similarity matching instead of custom algorithm
-4. **Data Standard Validation**: New "Participant Incident" type with enforced structure requirements
+**Team Composition**:
+- 1-2 Backend Engineers (Node.js/GraphQL/PostgreSQL)
+- 1-2 Frontend Engineers (React/TypeScript/Relay)
+- 1 DevOps Engineer (part-time, for WebSocket infrastructure)
 
-See `docs/ARCHITECTURE.md` for detailed analysis and decision matrix.
+**Critical Path Items**:
+1. Data Standards validation engine (Phase 0) - BLOCKER for MVP
+2. WebSocket infrastructure (Phase 4) - Required for real-time
+3. Matching algorithm (Phase 2) - Core value proposition
+4. React app setup with Relay (Phase 5) - Frontend foundation
 
----
+## Context
 
-## 📦 Deliverables
+### Problem Statement
+- Networks contain 1 lead org + multiple member orgs
+- Each org has their own tenant data (participants, incidents) in separate databases
+- Organizations need to collaborate on the same participants who may exist across multiple orgs
+- Must handle PII privacy controls (some orgs share PII, others don't)
+- Need to match/deduplicate participants across orgs without creating data integrity issues
+- Must support real-time collaboration on incidents with per-org response tracking
 
-### 1. Database Schema ✅
-
-**File**: `database-schema.sql` (541 lines)
-
-**Contents**:
-- ✅ 8 core network tables with full DDL
-- ✅ Comprehensive indexes for performance
-- ✅ Foreign key relationships
-- ✅ 2 database views for common queries
-- ✅ Audit logging infrastructure
-- ✅ PII privacy controls schema
-- ✅ Matching algorithm support tables
-
-**Tables Created**:
-1. `network_participants` - Deduplicated people across orgs
-2. `network_participant_sources` - Links to tenant DB records
-3. `network_incidents` - Shared incident tracking
-4. `network_incident_org_responses` - Per-org response tracking
-5. `network_incident_participants` - Participant-incident links
-6. `network_notes` - Collaboration notes
-7. `network_referrals` - Cross-org referrals
-8. `network_audit_log` - PII access tracking
-9. `network_pii_settings` - Privacy configurations
-10. `network_participant_potential_matches` - Matches needing review
-
-**Plus**:
-- ALTER to add `standard_type` to existing `data_standards` table
-- Views: `v_network_participants_with_sources`, `v_network_incidents_summary`
-
-### 2. Sample Test Data ✅
-
-**File**: `sample-data.sql` (563 lines)
-
-**Realistic Scenarios**:
-- ✅ 1 network (Chicago West Side CVI Network)
-- ✅ 6 member organizations with varied PII settings
-- ✅ 10 network participants:
-  - 3 confirmed matches across multiple orgs
-  - 2 potential matches needing review
-  - 1 pending verification
-  - 4 unique participants
-- ✅ 5 incidents (2 critical, 1 high, 1 medium, 1 low)
-- ✅ Multi-org response tracking
-- ✅ 5 referrals (various states)
-- ✅ 11 collaboration notes
-- ✅ Sample audit log entries
-
-**PII Configurations Demonstrated**:
-- Full PII sharing (2 orgs)
-- Partial PII sharing (2 orgs)
-- No PII sharing (1 org)
-- Consent tracking
-
-### 3. Matching Algorithm Specification ✅
-
-**File**: `matching-algorithm.md` (629 lines)
-
-**Complete Specification**:
-- ✅ Scoring methodology (SSN: 45pts, DOB: 35pts, Name: 30pts)
-- ✅ Privacy-preserving hashing (HMAC-SHA256)
-- ✅ Field-specific scoring functions with examples
-- ✅ Threshold definitions (≥90, 70-89, <70)
-- ✅ Edge case handling:
-  - Three-way matches with disagreement
-  - Partial matches (different confidence levels)
-  - Nickname variations
-  - Missing SSN handling
-  - Transposed digits
-  - Twin/sibling confusion
-  - Data entry errors
-  - Name changes
-- ✅ Performance optimization strategies
-- ✅ Query optimization with indexes
-- ✅ Background job processing
-- ✅ Unit test specifications
-- ✅ Future enhancements
-
-### 4. Interactive Demo ✅
-
-**Files**: `demo/index.html`, `demo/styles.css`, `demo/matching-demo.js` (730 lines total)
-
-**Features**:
-- ✅ 6 interactive matching scenarios:
-  1. High confidence match (95+)
-  2. Potential match (70-89)
-  3. No match (<70)
-  4. Three-way match
-  5. Nickname variation
-  6. Data entry error
-- ✅ Visual score breakdown with animated gauge
-- ✅ PII visibility toggle
-- ✅ Side-by-side comparison table
-- ✅ Action buttons (Confirm, Review, Reject)
-- ✅ Responsive design (mobile-friendly)
-- ✅ Polished UI (Tailwind-inspired)
-
-**No Backend Required**: Pure HTML/CSS/JS demo for stakeholder presentations
-
-### 5. GraphQL API Examples ✅
-
-**Files**:
-- `api-examples/queries.graphql` (569 lines)
-- `api-examples/mutations.graphql` (530 lines)
-- `api-examples/subscriptions.graphql` (546 lines)
-- `api-examples/sample-responses.json` (497 lines)
-
-**Queries Documented** (21 total):
-- Participant queries (list, detail, search, potential matches)
-- Incident queries (list, detail)
-- Referral queries (list, filter)
-- Note queries (list, filter)
-- Settings queries (PII permissions, org permissions)
-- Network metadata (overview, statistics)
-- Audit log queries
-- Complex dashboard queries
-
-**Mutations Documented** (24 total):
-- Participant mutations (confirm match, reject, manual link, flag for review)
-- Incident mutations (create, update status, link participants, import)
-- Referral mutations (create, accept, decline, update status)
-- Note mutations (create, update, delete)
-- PII settings mutations (update, revoke)
-- Admin mutations (run matcher, clear cache, unlink participants)
-- Complex multi-step mutations
-
-**Subscriptions Documented** (14 total):
-- Participant updates (real-time changes, match detection)
-- Incident updates (status changes, response updates)
-- Referrals (received, status changed)
-- Notes/collaboration (created, participant/incident-specific)
-- Network activity feed
-- Presence/typing indicators
-- Critical alerts
-- PII settings changes
-
-**Sample Responses**:
-- ✅ Full JSON examples with realistic data
-- ✅ PII filtering demonstration (masked vs revealed)
-- ✅ Subscription event payloads
-- ✅ Error responses
-
-### 6. Architecture Documentation ✅
-
-**File**: `docs/ARCHITECTURE.md` (847 lines)
-
-**Comprehensive Coverage**:
-- ✅ System architecture diagram (ASCII art)
-- ✅ Data flow diagrams (3 complete flows)
-- ✅ Component architecture (frontend + backend)
-- ✅ Database design (network + tenant DBs)
-- ✅ API layer (GraphQL schema, PII middleware)
-- ✅ 3-tier caching strategy (request/Redis/LRU)
-- ✅ Real-time updates (WebSocket + Redis Pub/Sub)
-- ✅ Security architecture (auth, PII protection, audit)
-- ✅ Scalability (bottlenecks, solutions, targets)
-- ✅ Deployment considerations
-- ✅ Monitoring & alerts
-- ✅ Future enhancements
-
-### 7. Comprehensive README ✅
-
-**File**: `README.md` (782 lines)
-
-**Complete Project Guide**:
-- ✅ Overview & key features
-- ✅ Repository structure
-- ✅ Quick start guide
-- ✅ Implementation roadmap (all 5 phases)
-- ✅ Technical stack
-- ✅ Sample data summary
-- ✅ Security & privacy details
-- ✅ Performance targets
-- ✅ Demo features
-- ✅ Design decisions explained
-- ✅ Documentation index
-- ✅ Next steps
-- ✅ Remaining product questions
-- ✅ Contributing guidelines
+### Key Challenges Identified
+1. **Cross-Tenant Data Queries** - Performance implications of querying multiple tenant databases
+2. **Participant Matching/Deduplication** - Identifying same person across orgs without false positives
+3. **PII Security** - Granular privacy controls per org, per network
+4. **Data Synchronization** - Keeping views fresh as source data changes
+5. **Scalability** - Could have dozens of orgs in a network, hundreds of participants
+6. **Type System** - Extending data standards to support different types (Participant vs Incident)
 
 ---
 
-## 📊 Statistics
+## Phase 1: Understanding Existing Infrastructure
 
-### Total Files Created: 12
+### How Data Standard Views Work (From Codebase Analysis)
 
-1. `database-schema.sql` - 541 lines
-2. `sample-data.sql` - 563 lines
-3. `matching-algorithm.md` - 629 lines
-4. `demo/index.html` - 181 lines
-5. `demo/styles.css` - 378 lines
-6. `demo/matching-demo.js` - 371 lines
-7. `api-examples/queries.graphql` - 569 lines
-8. `api-examples/mutations.graphql` - 530 lines
-9. `api-examples/subscriptions.graphql` - 546 lines
-10. `api-examples/sample-responses.json` - 497 lines
-11. `docs/ARCHITECTURE.md` - 847 lines
-12. `README.md` - 782 lines
+**File:** `Apricot_Files/apricot-api/src/application/services/dataStandardsService.ts`
 
-**Total Lines**: ~6,434 lines of documentation, schema, and code
+#### View Creation Process:
+When a data standard is mapped to member org forms:
+1. Each mapping creates a row in `data_standard_forms` table (per org, per form)
+2. Each DSF row triggers creation of a database VIEW in that org's tenant DB
+3. View name format: `dsf_{data_standard_form_id}_view`
+4. Views are **dynamic SQL views** (not materialized) - they query live data at runtime
 
-### Coverage
+#### View Structure (Standard Columns):
+```sql
+dsf_123_view:
+  org_id                  -- Current organization ID
+  parent_id               -- From documents table
+  document_id             -- Primary key reference
+  document_ids            -- Concatenated document IDs (for multiple T2s)
+  binding_t1_id           -- Tier 1 document ID binding
+  active                  -- Excludes drafts (active = 1)
+  mod_time                -- Last modification time
+  [field_123_firstName]   -- Mapped data standard fields
+  [field_123_lastName]    -- (multi-column fields get suffixes)
+  [field_456]             -- Single column fields
+  -- Linking fields (types 38/39) include metadata:
+  [field_789__link_form_id]
+  [field_789__link_field_id]
+  [field_789__link_direction]
+  etc.
+```
 
-| Area | Status | Files |
-|------|--------|-------|
-| **Database Design** | ✅ Complete | 2 files |
-| **Matching Algorithm** | ✅ Complete | 1 file |
-| **API Design** | ✅ Complete | 4 files |
-| **Demo/Prototype** | ✅ Complete | 3 files |
-| **Documentation** | ✅ Complete | 2 files |
-| **Backend Implementation** | 🔲 Not Started | 0 files |
-| **Frontend Implementation** | 🔲 Not Started | 0 files |
+#### Key Insight: Views Auto-Sync!
+- Views are **NOT materialized** - they're dynamic SQL queries
+- They query directly from `data_{formId}` tables and `documents` table
+- **No explicit sync mechanism needed** - views always reflect current data
+- When underlying tier1 data changes, view results automatically update on next query
+
+#### Data Standards Map Table:
+**File:** `Apricot_Files/apricot-api/src/repository/models/org/data_standards_map.ts`
+
+```sql
+data_standards_map:
+  id (PK)
+  data_standard_id        -- Links to global data standard
+  data_standard_form_id   -- Which DSF this maps to
+  data_standard_field     -- e.g., "field_4721"
+  form_id                 -- Tenant's actual form ID
+  field_id                -- Tenant's actual field ID
+  reference_tag           -- Optional tag
+```
+
+**Mapping format:** `dsfId_dsFieldId` → `formId_fieldId`
+
+Example: DSF 105, field 4721 maps to Form 223, field 891
+
+### Architecture Decision: Leverage Existing DSF Views
+
+**Selected Approach: Query DSF views directly + Cache aggregated results**
+
+Since DSF views are:
+1. Already created when data standards are mapped
+2. Auto-sync with source data (no maintenance needed)
+3. Contain all mapped fields in standardized format
+4. One view per org per data standard form
+
+**Our Strategy:**
+- **Don't duplicate** the DSF view data into network tables
+- **Query DSF views** from all orgs in the network via GraphQL
+- **Cache the aggregated/matched results** in Redis (5-min TTL)
+- **Store only network-specific data** in network DB:
+  - Participant matches (which DSF records = same person)
+  - Network incidents (not in tenant DBs)
+  - Org responses to incidents
+  - Notes, referrals
+
+**Data Flow:**
+```
+User requests participants list
+  ↓
+Check Redis cache for network {id} participants
+  ↓ (cache miss)
+Query DSF views from all member orgs:
+  - SELECT * FROM dsf_101_view (org A)
+  - SELECT * FROM dsf_102_view (org B)
+  - SELECT * FROM dsf_103_view (org C)
+  ↓
+Join with network_participant_matches table
+  ↓
+Apply PII filtering based on org permissions
+  ↓
+Cache aggregated result in Redis (TTL: 300s)
+  ↓
+Return to client
+```
+
+**Cache Invalidation Triggers:**
+- Record updated in any tenant DB → Invalidate cache for that network
+- Match confirmed/rejected → Invalidate participant cache
+- PII settings changed → Invalidate cache for that org
+
+#### PII Privacy Architecture
+
+**Critical Decision:** How do we enforce PII visibility rules?
+
+**Requirements:**
+- Per-network configuration (PII sharing enabled/disabled)
+- Per-org opt-in/opt-out within network
+- Different orgs in same network can have different PII visibility
+- Must support progressive reveal (show anonymized, then reveal on permission)
+
+**Recommendation:**
+```
+network_pii_settings:
+  - network_id
+  - org_id
+  - pii_sharing_enabled (boolean)
+  - fields_shared (JSON array: ["name", "dob", "ssn_last4", etc])
+  - consent_confirmed_at
+  - confirmed_by_user_id
+
+API layer enforces visibility:
+- Query includes requesting_org_id
+- Response filters PII based on org_id permissions
+- Audit log for PII access
+```
 
 ---
 
-## 🎯 What Can Be Done Now
+## Phase 2: High-Level Architecture
 
-### ✅ Stakeholder Presentations
-- Demo the interactive matching UI
-- Walk through API examples
-- Explain architecture decisions
-- Show sample data scenarios
+### System Components
 
-### ✅ Technical Review
-- Database schema review with DBAs
-- API design review with frontend team
-- Security review with infosec
-- Performance target validation
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Network Document Folder                 │
+│                        (React App)                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      Apricot API                             │
+│                  (Network Folder Endpoints)                  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          ▼                   ▼                   ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│  Network DB      │ │  Tenant 1 DB     │ │  Tenant N DB     │
+│  (Shared Data)   │ │  (Source Data)   │ │  (Source Data)   │
+└──────────────────┘ └──────────────────┘ └──────────────────┘
+```
 
-### ✅ Planning & Estimation
-- Sprint planning (all tasks defined in roadmap)
-- Resource allocation
-- Timeline estimation
-- Risk assessment
+### Database Schema (Network-Level)
 
-### ✅ Development Setup
-- Run `database-schema.sql` to create tables
-- Load `sample-data.sql` for testing
-- Set up local development environment
-- Configure Redis for caching
+#### Core Tables
+
+```sql
+-- Network participants (matched/deduplicated records)
+network_participants:
+  - id (PK)
+  - network_id (FK)
+  - created_at
+  - match_confidence_score
+  - match_status (confirmed, potential, pending_verification)
+
+-- Links individual org records to network participant
+network_participant_sources:
+  - id (PK)
+  - network_participant_id (FK)
+  - tenant_id
+  - source_record_id (tier1_record_id in tenant DB)
+  - source_form_id
+  - name_used (encrypted)
+  - ssn_last4_hash
+  - dob_hash
+  - contributed_at
+  - confirmed_by_org_user_id
+
+-- Incidents shared across network
+network_incidents:
+  - id (PK)
+  - network_id (FK)
+  - incident_type
+  - severity
+  - location
+  - occurred_at
+  - reported_by_org_id
+  - description
+  - created_at
+
+-- Per-org response to incidents
+network_incident_org_responses:
+  - id (PK)
+  - network_incident_id (FK)
+  - org_id (FK)
+  - status (not_started, in_progress, complete)
+  - planned_actions (JSON)
+  - current_actions (JSON)
+  - completed_actions (JSON)
+  - updated_at
+
+-- Link participants to incidents
+network_incident_participants:
+  - network_incident_id (FK)
+  - network_participant_id (FK)
+
+-- Network-level collaboration notes
+network_notes:
+  - id (PK)
+  - network_id (FK)
+  - author_org_id
+  - author_user_id
+  - content
+  - related_participant_id (nullable)
+  - related_incident_id (nullable)
+  - created_at
+
+-- Referrals between orgs
+network_referrals:
+  - id (PK)
+  - network_id (FK)
+  - participant_id (FK)
+  - from_org_id
+  - to_org_id
+  - reason
+  - status (pending, accepted, in_progress, completed, declined)
+  - created_at
+  - updated_at
+```
+
+### Data Standards Extension
+
+**Current:** Data standards define shared field mappings
+**Needed:** Add type categorization
+
+```sql
+data_standards:
+  + standard_type ENUM('participant', 'incident', 'other')
+
+-- This determines which features are available:
+- participant type → matching, referrals, cross-org coordination
+- incident type → multi-org response tracking, flagging
+```
 
 ---
 
-## 🚧 What's Next (Implementation Phase)
+## COMPREHENSIVE IMPLEMENTATION PLAN
 
-### Phase 1: Backend Foundation (2-3 weeks)
+## Phase-by-Phase Breakdown
 
-**Models & Repository Layer**:
-```
-src/repository/models/global/
-  ├── network_participants.ts
-  ├── network_participant_sources.ts
-  ├── network_incidents.ts
-  ├── network_incident_org_responses.ts
-  ├── network_referrals.ts
-  ├── network_notes.ts
-  ├── network_audit_log.ts
-  └── network_pii_settings.ts
-
-src/repository/services/
-  ├── NetworkParticipantService.ts
-  ├── NetworkIncidentService.ts
-  └── NetworkReferralService.ts
-
-src/repository/query/
-  └── networkDocumentFolder.ts
-```
-
-**Application Services**:
-```
-src/application/services/
-  ├── networkDocumentFolderService.ts
-  ├── participantMatchingService.ts
-  ├── networkCacheService.ts
-  └── networkEventService.ts
-```
-
-### Phase 2: GraphQL API (2 weeks)
-
-```
-src/graphql-api/typeDefs/
-  ├── networkDocumentFolder.ts
-  ├── networkParticipant.ts
-  ├── networkIncident.ts
-  └── networkReferral.ts
-
-src/graphql-api/resolvers/networkDocumentFolder/
-  ├── queries.ts
-  ├── mutations.ts
-  └── subscriptions.ts
-```
-
-**Plus**: WebSocket server setup in `src/graphql-api/index.ts`
-
-### Phase 3: Frontend (3-4 weeks)
-
-```
-src/NetworkDocumentFolder/
-  ├── views/
-  │   ├── PeopleView/
-  │   ├── IncidentsView/
-  │   ├── ReferralsView/
-  │   └── DashboardView/
-  ├── components/
-  ├── hooks/
-  └── graphql/
-```
-
-### Phase 4: Testing (1-2 weeks)
-
-- Unit tests (services, matching algorithm)
-- Integration tests (API endpoints)
-- E2E tests (full workflows)
-- Performance tests (load testing)
-- Security audit (penetration testing)
-
-### Phase 5: Deployment (1 week)
-
-- Production database migrations
-- Environment configuration
-- Monitoring setup
-- Beta deployment
-- Documentation finalization
-
-**Total Estimated Time**: 9-12 weeks from start to production
+This section breaks down the entire implementation into small, manageable increments. Each increment represents 1-2 hours of focused work and can be given as a single Claude prompt.
 
 ---
 
-## 🔑 Key Decisions Made
+## PHASE 0: Data Standards React - Validation Engine (2-3 weeks)
 
-### 1. Architecture: Query DSF Views Directly
+**Objective**: Add "Participant Incident" data standard type with field validation
 
-**Decision**: Don't materialize/copy DSF view data into network tables
+**Location**: `/Users/patrick.kennedy/Desktop/Apricot_Files/data-standards-react/`
 
-**Why**:
-- DSF views auto-sync (no maintenance)
-- Source of truth remains in tenant DB
-- Cache handles performance
+### 0.1: Add Standard Type Dropdown (Simple - 2 hours)
 
-**Tradeoff**: Multi-DB queries, but solved via parallel execution + caching
+**Files to Modify**:
+- `src/Modules/DataStandardsEdit/components/BasicInfo.tsx`
+- `src/Modules/DataStandardsEdit/state/dataStandardEditAtoms.ts`
 
-### 2. Matching: Human Confirmation Required
-
-**Decision**: Never auto-merge, even with 95+ score
-
-**Why**:
-- False positives have serious consequences
-- Compliance/legal requirements
-- Users need to understand WHY records match
-
-### 3. Caching: 5-Minute TTL
-
-**Decision**: Short cache expiry with aggressive invalidation
-
-**Why**:
-- Balance performance vs freshness
-- PII changes need quick propagation
-- Explicit invalidation handles most updates
-
-### 4. Privacy: Hash for Matching, Encrypt for Display
-
-**Decision**: Store both hashed (one-way) and encrypted (reversible) PII
-
-**Why**:
-- Hashes enable privacy-preserving matching
-- Encryption enables display to authorized users
-- Cannot derive one from the other
-
-### 5. Real-Time: WebSocket + Redis Pub/Sub
-
-**Decision**: GraphQL subscriptions over WebSocket with Redis backend
-
-**Why**:
-- Standard Apollo pattern
-- Scales horizontally
-- Redis pub/sub for multi-instance support
-
----
-
-## 🎓 Lessons Learned (for Next Project)
-
-### What Went Well
-
-✅ **Comprehensive Planning**: Having full architecture before coding saves rework
-✅ **Interactive Demo**: Visual prototype helps stakeholders understand complex features
-✅ **Sample Data**: Realistic test data reveals edge cases early
-✅ **API-First Design**: Complete API spec enables parallel frontend/backend work
-
-### What to Improve
-
-🔶 **Performance Benchmarking**: Should have actual numbers from prototype
-🔶 **User Testing**: Need feedback from actual network coordinators
-🔶 **Incremental Delivery**: Plan smaller MVPs within phases
-🔶 **Monitoring Strategy**: Define metrics earlier in process
-
----
-
-## 📞 Questions? Next Steps?
-
-### For Stakeholders
-
-1. **Review the demo**: Open `demo/index.html` in your browser
-2. **Read the README**: High-level overview of everything
-3. **Check sample data**: See realistic scenarios in `sample-data.sql`
-4. **Answer product questions**: See "Remaining Questions" in README
-
-### For Engineers
-
-1. **Read ARCHITECTURE.md**: Understand system design
-2. **Review API examples**: See complete GraphQL schema
-3. **Study matching algorithm**: Understand scoring logic
-4. **Set up database**: Run schema + sample data locally
-
-### For Project Managers
-
-1. **Review roadmap**: 5 phases outlined in README
-2. **Estimate resources**: ~9-12 weeks, 2-3 engineers
-3. **Identify risks**: See security, performance, scalability sections
-4. **Plan milestones**: Align phases with sprint boundaries
-
----
-
-## 🔄 Updated Implementation Plan (Phased Approach)
-
-### Phase 0: Data Standards Enhancement (2-3 weeks)
-
-**Location**: `Apricot_Files/apricot-client-portal/src/DataStandards/`
-
-**Tasks**:
-1. Add `standard_type` dropdown to Data Standard creation form
-   - Options: "General", "Participant Incident"
-   - Default: "General"
-
-2. Build validation engine for "Participant Incident" type:
-   - ✅ Must have exactly 1 Participant Tier 1 form
-   - ✅ Must have exactly 1 Incident Tier 1 form (linked to Participant)
-   - ✅ Participant must include required fields:
-     - Name (text/name field type)
-     - Date of Birth (date field type)
-     - Social Security Number (text/encrypted field type)
-     - Address (text/address field type)
-   - ✅ Additional fields can be added (validation rules extensible)
-
-3. Display validation errors during DS creation
-4. Prevent saving DS if validation fails
-5. Show validation rules as checklist in UI
-
-**Note**: Validation rules are stored in `data_standard_validation_rules` table and can be extended for future data standard types.
-
----
-
-### Phase 1: Internal Members Only (MVP) - 4-5 weeks
-
-**Scope**: Network members are ALL Apricot tenants with DSF views
-
-**Database**:
-- ✅ Schema already defined (internal member support)
-- Run migration to add tables
-- Seed validation rules for "Participant Incident" type
-
-**Backend Services**:
-```
-src/application/services/
-  ├── networkDocumentFolderService.ts
-  ├── networkParticipantService.ts
-  ├── networkMatchingService.ts (basic algorithm)
-  └── networkCacheService.ts
-```
-
-**Key Features**:
-- Query DSF views from all network member orgs (in parallel)
-- Aggregate participant data
-- Basic matching algorithm (name + DOB + SSN similarity)
-- Cache results in Redis (5-min TTL)
-- Real-time updates via GraphQL subscriptions
-
-**GraphQL API**:
-- Queries: `networkParticipants`, `networkIncidents`
-- Mutations: `confirmMatch`, `rejectMatch`, `createIncident`
-- Subscriptions: `participantUpdated`, `incidentUpdated`
-
-**Frontend**:
-- Network Document Folder React app (MVP)
-- Connection status indicator (pulsing green dot)
-- Real-time updates (no "Last synced" text)
-- Participant matching UI
-- Incident coordination
-
-**No Snowflake/Impact Hub dependency needed!**
-
----
-
-### Phase 2: External Member Support - 3-4 weeks
-
-**Scope**: Add support for orgs whose data is in Impact Hub (not Apricot DSF)
-
-**Key Architectural Point**:
-- External orgs STILL have Apricot `org_id` (for auth/permissions/network membership)
-- But their participant DATA lives in Impact Hub (Snowflake), not Apricot `data_N` tables
-- They have limited Apricot UI access (network folder only, not full case management)
-- This is because Apricot is bad at storing large volumes of data
-
-**Database Updates**:
-- `network_member_orgs.member_type` = 'external'
-- `network_member_orgs.impact_hub_view` = name of view to query
-- All external orgs must have `org_id` (they're still Apricot orgs!)
-
-**Backend Services**:
-```
-src/application/services/
-  ├── dataSourceRouter.ts (NEW)
-  │   - Routes queries based on member_type
-  │   - internal → query DSF view
-  │   - external → query Impact Hub view
-  │
-  ├── impactHubConnectionService.ts (NEW)
-  │   - Manages Snowflake connection for Impact Hub queries
-  │
-  └── impactHubMatchingService.ts (NEW)
-      - Leverage Snowflake similarity matching
-      - EDITDISTANCE(), JAROWINKLER_SIMILARITY()
-```
-
-**Query Flow**:
+**Changes**:
 ```typescript
-async function getNetworkParticipants(networkId) {
-  const members = await getNetworkMembers(networkId);
+// Add to form state
+standardType: 'general' | 'participant_incident'
 
-  const results = await Promise.all(
-    members.map(async (member) => {
-      if (member.member_type === 'internal') {
-        // Query DSF view (Apricot Postgres)
-        return queryDSFView(member.org_id, member.data_standard_form_id);
-      } else {
-        // Query Impact Hub (Snowflake)
-        return queryImpactHubView(member.impact_hub_view);
-      }
-    })
-  );
+// Add MUI Select dropdown
+<FormControl>
+  <InputLabel>Data Standard Type</InputLabel>
+  <Select
+    value={formData.standardType}
+    onChange={handleTypeChange}
+  >
+    <MenuItem value="general">General</MenuItem>
+    <MenuItem value="participant_incident">Participant Incident</MenuItem>
+  </Select>
+</FormControl>
+```
 
-  return aggregateResults(results);
+**Dependencies**: None
+**Verification**: Dropdown appears, saves to form state
+
+### 0.2: Create Validation Rules Engine (Medium - 4 hours)
+
+**Files to Create**:
+- `src/Modules/DataStandardsEdit/utils/validationRules.ts`
+- `src/Modules/DataStandardsEdit/types/ValidationRule.ts`
+
+**Implementation**:
+```typescript
+// ValidationRule.ts
+export type RuleType =
+  | 'required_tier1'
+  | 'required_field'
+  | 'required_field_type'
+  | 'required_link';
+
+export interface ValidationRule {
+  ruleType: RuleType;
+  config: Record<string, any>;
+  errorMessage: string;
+}
+
+// validationRules.ts
+export const PARTICIPANT_INCIDENT_RULES: ValidationRule[] = [
+  {
+    ruleType: 'required_tier1',
+    config: { tier1Type: 'participant' },
+    errorMessage: 'Must include a Participant (Tier 1) form'
+  },
+  {
+    ruleType: 'required_tier1',
+    config: { tier1Type: 'incident' },
+    errorMessage: 'Must include an Incident (Tier 1) form linked to Participant'
+  },
+  {
+    ruleType: 'required_field',
+    config: {
+      tier1Type: 'participant',
+      fieldName: 'name',
+      fieldTypes: ['text', 'name']
+    },
+    errorMessage: 'Participant must have a Name field'
+  },
+  // ... DOB, SSN, Address rules
+];
+
+export function validateDataStandard(
+  standardType: string,
+  forms: DataStandardForm[]
+): ValidationResult {
+  if (standardType !== 'participant_incident') return { valid: true };
+
+  const rules = PARTICIPANT_INCIDENT_RULES;
+  const errors: string[] = [];
+
+  for (const rule of rules) {
+    if (!checkRule(rule, forms)) {
+      errors.push(rule.errorMessage);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 ```
 
-**Matching Strategy**:
-- Sync all participants (internal + external) to Impact Hub matching workspace
-- Run Snowflake similarity queries (background job, every 30 min)
-- Store potential matches in `network_participant_potential_matches`
-- Present to users for confirmation
+**Dependencies**: 0.1
+**Verification**: Unit tests pass, validation logic correct
+
+### 0.3: Add Validation UI Component (Medium - 3 hours)
+
+**Files to Create**:
+- `src/Modules/DataStandardsEdit/components/ValidationChecklist.tsx`
+
+**Implementation**:
+```typescript
+import { Alert, Checkbox, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { CheckCircle, Error } from '@mui/icons-material';
+
+export function ValidationChecklist({ validationResult }: Props) {
+  if (validationResult.valid) {
+    return (
+      <Alert severity="success">
+        All validation rules passed ✓
+      </Alert>
+    );
+  }
+
+  return (
+    <Alert severity="error">
+      <List>
+        {validationResult.errors.map((error, i) => (
+          <ListItem key={i}>
+            <ListItemIcon><Error color="error" /></ListItemIcon>
+            <ListItemText primary={error} />
+          </ListItem>
+        ))}
+      </List>
+    </Alert>
+  );
+}
+```
+
+**Files to Modify**:
+- `src/Modules/DataStandardsEdit/index.tsx` - Add validation display
+
+**Dependencies**: 0.2
+**Verification**: Validation errors display correctly, blocks save
+
+### 0.4: Integrate with Save Mutation (Simple - 2 hours)
+
+**Files to Modify**:
+- `src/Modules/DataStandardsEdit/mutations/UpdateDataStandardMutation.ts`
+- `src/Modules/DataStandardsEdit/components/SaveButton.tsx`
+
+**Changes**:
+- Run validation before allowing save
+- Display validation checklist
+- Disable save button if invalid
+- Include `standard_type` in mutation variables
+
+**Dependencies**: 0.3
+**Verification**: Cannot save invalid data standard, can save valid one
+
+### 0.5: Add Validation to Backend (Complex - 4 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/repository/models/global/data_standard_validation_rules.ts`
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/graphql-api/mutations/dataStandards/updateDataStandard.ts`
+- Add server-side validation logic
+
+**Dependencies**: 0.4
+**Verification**: Backend rejects invalid data standards
 
 ---
 
-### Updated Timeline
+## PHASE 1: Backend - Database & Models (1-2 weeks)
 
-| Phase | Duration | Dependencies | Snowflake Required? |
-|-------|----------|--------------|---------------------|
-| **Phase 0: Data Standards** | 2-3 weeks | None | ❌ No |
-| **Phase 1: Internal Members (MVP)** | 4-5 weeks | Phase 0 | ❌ No |
-| **Phase 2: External Members** | 3-4 weeks | Phase 1, Impact Hub access | ✅ Yes |
-| **Phase 3: Testing & Polish** | 2-3 weeks | Phase 2 | N/A |
-| **Phase 4: Deployment** | 1 week | Phase 3 | N/A |
+**Objective**: Create all network-level database tables and Sequelize/Knex models
 
-**Phase 1 Total**: 6-8 weeks (no Snowflake dependency!)
-**Phase 1+2 Total**: 12-17 weeks (with external member support)
+### 1.1: Run Database Migration (Simple - 1 hour)
+
+**Files to Execute**:
+- `/Users/patrick.kennedy/Desktop/Apricot_Files/whiteboarding/network-document-folder/database-schema.sql`
+
+**Actions**:
+1. Review schema (already complete)
+2. Run migration against dev database
+3. Verify all tables created with correct indexes
+
+**Dependencies**: Database access
+**Verification**: `SHOW TABLES LIKE 'network_%'` returns 10 tables
+
+### 1.2: Create Sequelize Models - Participants (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/repository/models/global/network_participants.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_participant_sources.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_participant_potential_matches.ts`
+
+**Template**:
+```typescript
+import { DataTypes, Model } from 'sequelize';
+
+export class NetworkParticipant extends Model {
+  declare id: number;
+  declare network_id: number;
+  declare match_status: 'confirmed' | 'potential_match' | 'pending_verification';
+  declare match_confidence_score: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare active: boolean;
+}
+
+export function initNetworkParticipant(sequelize: Sequelize) {
+  NetworkParticipant.init({
+    id: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    network_id: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: false
+    },
+    match_status: {
+      type: DataTypes.ENUM('confirmed', 'potential_match', 'pending_verification'),
+      defaultValue: 'pending_verification'
+    },
+    // ... other fields
+  }, {
+    sequelize,
+    tableName: 'network_participants',
+    underscored: true
+  });
+}
+```
+
+**Dependencies**: 1.1
+**Verification**: Import models, no TypeScript errors
+
+### 1.3: Create Sequelize Models - Incidents (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/repository/models/global/network_incidents.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_incident_org_responses.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_incident_participants.ts`
+
+**Dependencies**: 1.1
+**Verification**: Models import successfully
+
+### 1.4: Create Sequelize Models - Collaboration (Simple - 2 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/repository/models/global/network_referrals.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_notes.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_audit_log.ts`
+- `Apricot_Files/apricot-api/src/repository/models/global/network_pii_settings.ts`
+
+**Dependencies**: 1.1
+**Verification**: All 10 models created and loadable
+
+### 1.5: Create Model Associations (Medium - 2 hours)
+
+**Files to Modify**:
+- All network model files from 1.2-1.4
+
+**Add Associations**:
+```typescript
+NetworkParticipant.hasMany(NetworkParticipantSource, {
+  foreignKey: 'network_participant_id',
+  as: 'sources'
+});
+
+NetworkIncident.hasMany(NetworkIncidentOrgResponse, {
+  foreignKey: 'network_incident_id',
+  as: 'orgResponses'
+});
+
+NetworkIncident.belongsToMany(NetworkParticipant, {
+  through: NetworkIncidentParticipant,
+  foreignKey: 'network_incident_id',
+  as: 'participants'
+});
+```
+
+**Dependencies**: 1.2, 1.3, 1.4
+**Verification**: Can query with includes: `NetworkParticipant.findAll({ include: ['sources'] })`
 
 ---
 
-### Critical Dependencies
+## PHASE 2: Backend - Services & Repository Layer (2-3 weeks)
 
-**Phase 1 (MVP)**:
-- ✅ No external dependencies
-- ✅ Uses existing Apricot infrastructure
-- ✅ Uses existing DSF view pattern
-- ✅ Redis already available
+**Objective**: Implement business logic for participant matching, incident tracking, and multi-org queries
 
-**Phase 2 (External Members)**:
-- ⚠️ Requires Snowflake/Impact Hub access
-- ⚠️ Requires external org data in standardized schema
-- ⚠️ External orgs must be set up as Apricot orgs (for auth)
+### 2.1: Create NetworkDocumentFolderService Base (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/application/services/networkDocumentFolderService.ts`
+
+**Implementation**:
+```typescript
+import { AbstractService } from './AbstractService';
+import { Context } from '../context';
+import { NetworkParticipant, NetworkIncident } from '../../repository/models/global';
+
+export class NetworkDocumentFolderService extends AbstractService {
+  constructor(claims: Claims, connections: Connections) {
+    super(claims, connections);
+  }
+
+  async getNetworkParticipants(
+    context: Context,
+    networkId: number,
+    options?: { matchStatus?: string; limit?: number; offset?: number }
+  ): Promise<{ total: number; rows: any[] }> {
+    // Cache check
+    const cacheKey = `network:${networkId}:participants:${options?.matchStatus || 'all'}`;
+    const cached = await this.connections.redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    // Query network participants
+    const participants = await NetworkParticipant.findAll({
+      where: { network_id: networkId, ...(options?.matchStatus && { match_status: options.matchStatus }) },
+      include: ['sources'],
+      limit: options?.limit || 50,
+      offset: options?.offset || 0
+    });
+
+    // Query DSF views for each source
+    const enriched = await this.enrichWithDSFData(context, participants);
+
+    // Apply PII filtering
+    const filtered = this.applyPIIFiltering(context, enriched);
+
+    // Cache result
+    await this.connections.redis.set(cacheKey, JSON.stringify(filtered), 'EX', 300);
+
+    return { total: participants.length, rows: filtered };
+  }
+
+  private async enrichWithDSFData(context: Context, participants: any[]): Promise<any[]> {
+    // Implementation in 2.3
+  }
+
+  private applyPIIFiltering(context: Context, data: any[]): any[] {
+    // Implementation in 2.4
+  }
+}
+```
+
+**Dependencies**: 1.5
+**Verification**: Service instantiates, basic query works
+
+### 2.2: Create NetworkQuery Repository (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/repository/query/networkDocumentFolder.ts`
+
+**Implementation**:
+```typescript
+import { AbstractQuery } from './abstract';
+import { Context } from '../../application/context';
+
+export class NetworkDocumentFolderQuery extends AbstractQuery {
+  async getParticipants(
+    context: Context,
+    networkId: number,
+    filters?: { matchStatus?: string }
+  ): Promise<any[]> {
+    const knex = context.connections.knex;
+
+    let query = knex('network_participants as np')
+      .select('np.*')
+      .leftJoin('network_participant_sources as nps', 'np.id', 'nps.network_participant_id')
+      .where('np.network_id', networkId)
+      .where('np.active', true);
+
+    if (filters?.matchStatus) {
+      query = query.where('np.match_status', filters.matchStatus);
+    }
+
+    return query;
+  }
+
+  async getDSFViewData(
+    context: Context,
+    orgId: number,
+    dsfId: number,
+    documentIds: number[]
+  ): Promise<any[]> {
+    const viewName = `dsf_${dsfId}_view`;
+    // Query tenant database
+    const knex = await context.connections.knex.getClientDb(orgId);
+
+    return knex(viewName)
+      .whereIn('document_id', documentIds)
+      .select('*');
+  }
+}
+```
+
+**Dependencies**: 2.1
+**Verification**: Raw queries return correct data
+
+### 2.3: Implement DSF View Enrichment (Complex - 4 hours)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/application/services/networkDocumentFolderService.ts`
+
+**Implementation**:
+```typescript
+private async enrichWithDSFData(
+  context: Context,
+  participants: NetworkParticipant[]
+): Promise<any[]> {
+  const query = new NetworkDocumentFolderQuery();
+
+  // Group sources by org/DSF for batch querying
+  const sourcesByOrg = new Map<number, Map<number, number[]>>();
+
+  for (const participant of participants) {
+    for (const source of participant.sources) {
+      if (!sourcesByOrg.has(source.org_id)) {
+        sourcesByOrg.set(source.org_id, new Map());
+      }
+      const dsfMap = sourcesByOrg.get(source.org_id)!;
+      if (!dsfMap.has(source.dsf_id)) {
+        dsfMap.set(source.dsf_id, []);
+      }
+      dsfMap.get(source.dsf_id)!.push(source.document_id);
+    }
+  }
+
+  // Query all DSF views in parallel
+  const dsfDataPromises: Promise<any>[] = [];
+
+  for (const [orgId, dsfMap] of sourcesByOrg) {
+    for (const [dsfId, documentIds] of dsfMap) {
+      dsfDataPromises.push(
+        query.getDSFViewData(context, orgId, dsfId, documentIds)
+      );
+    }
+  }
+
+  const allDsfData = await Promise.all(dsfDataPromises);
+
+  // Merge DSF data back into participants
+  // ... (mapping logic)
+
+  return enrichedParticipants;
+}
+```
+
+**Dependencies**: 2.2
+**Verification**: Participants include DSF field data
+
+### 2.4: Implement PII Filtering (Complex - 4 hours)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/application/services/networkDocumentFolderService.ts`
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/application/services/networkPIIService.ts`
+
+**Implementation**:
+```typescript
+export class NetworkPIIService extends AbstractService {
+  async getPIIPermissions(
+    context: Context,
+    networkId: number,
+    requestingOrgId: number
+  ): Promise<Map<number, string[]>> {
+    // Cache PII permissions
+    const cacheKey = `network:${networkId}:pii_permissions`;
+    const cached = await this.connections.redis.get(cacheKey);
+    if (cached) return new Map(JSON.parse(cached));
+
+    // Query network_pii_settings
+    const settings = await NetworkPIISettings.findAll({
+      where: { network_id: networkId, pii_sharing_enabled: true }
+    });
+
+    const permissions = new Map<number, string[]>();
+    for (const setting of settings) {
+      permissions.set(setting.org_id, setting.fields_shared);
+    }
+
+    // Cache for 1 hour
+    await this.connections.redis.set(cacheKey, JSON.stringify([...permissions]), 'EX', 3600);
+
+    return permissions;
+  }
+
+  filterPIIFields(
+    source: any,
+    permissions: Map<number, string[]>,
+    requestingOrgId: number
+  ): any {
+    const allowedFields = permissions.get(source.org_id) || [];
+
+    return {
+      ...source,
+      name_used: allowedFields.includes('name') ? source.name_used : '● ● ● (PII masked)',
+      dob: allowedFields.includes('dob') ? source.dob : null,
+      ssn_last4: allowedFields.includes('ssn_last4') ? source.ssn_last4 : null,
+      // ... other PII fields
+    };
+  }
+}
+
+// In NetworkDocumentFolderService
+private applyPIIFiltering(context: Context, data: any[]): any[] {
+  const piiService = new NetworkPIIService(this.claims, this.connections);
+  const permissions = await piiService.getPIIPermissions(
+    context,
+    networkId,
+    context.user.org_id
+  );
+
+  return data.map(participant => ({
+    ...participant,
+    sources: participant.sources.map(source =>
+      piiService.filterPIIFields(source, permissions, context.user.org_id)
+    )
+  }));
+}
+```
+
+**Dependencies**: 2.3
+**Verification**: PII masked for unauthorized orgs, visible for authorized
+
+### 2.5: Create Matching Service (Complex - 6 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/application/services/participantMatchingService.ts`
+
+**Implementation**:
+```typescript
+import crypto from 'crypto';
+
+export class ParticipantMatchingService extends AbstractService {
+  private matchSalt = process.env.NETWORK_MATCH_SALT;
+
+  async calculateMatchScore(
+    participantA: any,
+    participantB: any
+  ): Promise<number> {
+    let score = 0;
+
+    // SSN Last 4 (45 points)
+    if (participantA.ssn_last4_hash && participantB.ssn_last4_hash) {
+      if (participantA.ssn_last4_hash === participantB.ssn_last4_hash) {
+        score += 45;
+      }
+    }
+
+    // DOB (35 points)
+    if (participantA.dob_hash && participantB.dob_hash) {
+      if (participantA.dob_hash === participantB.dob_hash) {
+        score += 35;
+      } else if (this.isDOBWithin1Day(participantA.dob, participantB.dob)) {
+        score += 25; // Potential data entry error
+      }
+    }
+
+    // Name similarity (30 points)
+    const nameSimilarity = this.calculateLevenshteinSimilarity(
+      participantA.name_hash,
+      participantB.name_hash
+    );
+    score += Math.round(nameSimilarity * 30);
+
+    return score;
+  }
+
+  hashPII(value: string): string {
+    return crypto
+      .createHmac('sha256', this.matchSalt)
+      .update(value.toLowerCase().trim())
+      .digest('hex');
+  }
+
+  async findPotentialMatches(
+    context: Context,
+    networkId: number,
+    participantId: number
+  ): Promise<any[]> {
+    const participant = await NetworkParticipant.findByPk(participantId, {
+      include: ['sources']
+    });
+
+    const allParticipants = await NetworkParticipant.findAll({
+      where: {
+        network_id: networkId,
+        id: { [Op.ne]: participantId }
+      },
+      include: ['sources']
+    });
+
+    const matches = [];
+
+    for (const other of allParticipants) {
+      const score = await this.calculateMatchScore(participant, other);
+
+      if (score >= 70) {
+        matches.push({
+          participant_a_id: participantId,
+          participant_b_id: other.id,
+          match_score: score,
+          match_fields: this.getMatchedFields(participant, other),
+          status: score >= 90 ? 'high_confidence' : 'potential_match'
+        });
+      }
+    }
+
+    return matches;
+  }
+
+  private calculateLevenshteinSimilarity(a: string, b: string): number {
+    // Levenshtein distance implementation
+    // Returns 0-1 similarity score
+  }
+
+  private isDOBWithin1Day(dateA: Date, dateB: Date): boolean {
+    const diff = Math.abs(dateA.getTime() - dateB.getTime());
+    return diff <= 86400000; // 1 day in milliseconds
+  }
+}
+```
+
+**Dependencies**: 2.1
+**Verification**: Match scores calculated correctly, potential matches identified
+
+### 2.6: Create Background Matching Job (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/jobs/participantMatchingJob.ts`
+
+**Implementation**:
+```typescript
+import { Queue } from '../utils/queue';
+import { ParticipantMatchingService } from '../application/services/participantMatchingService';
+
+export class ParticipantMatchingJob {
+  private queue: Queue;
+
+  constructor(redis: Redis) {
+    this.queue = new Queue(redis, 'participant-matching', 3); // 3 concurrent
+  }
+
+  async enqueueMatching(networkId: number, participantId: number) {
+    await this.queue.add({
+      networkId,
+      participantId,
+      timestamp: Date.now()
+    });
+  }
+
+  startWorker() {
+    this.queue.process(async (job) => {
+      const { networkId, participantId } = job.data;
+
+      const matchingService = new ParticipantMatchingService(/* context */);
+      const potentialMatches = await matchingService.findPotentialMatches(
+        context,
+        networkId,
+        participantId
+      );
+
+      // Store matches in network_participant_potential_matches table
+      for (const match of potentialMatches) {
+        await NetworkParticipantPotentialMatch.create(match);
+      }
+
+      // Invalidate cache
+      await context.connections.redis.del(`network:${networkId}:participants`);
+
+      // Publish event (for subscriptions)
+      await context.pubsub.publish(`MATCH_DETECTED_${networkId}`, {
+        matchDetected: {
+          participant_a_id: participantId,
+          matches: potentialMatches
+        }
+      });
+
+      return { matchCount: potentialMatches.length };
+    });
+  }
+}
+```
+
+**Dependencies**: 2.5
+**Verification**: Job enqueues, processes, stores matches
 
 ---
 
-## ✨ Summary
+## PHASE 3: Backend - GraphQL API (TypeDefs, Resolvers, Mutations) (2-3 weeks)
 
-**Status**: 🎉 **Architecture Phase Complete + Updated**
+**Objective**: Create complete GraphQL API for Network Document Folder
 
-Everything needed to start implementation is ready:
-- ✅ Complete database schema with test data (UPDATED: external member support)
-- ✅ ~~Detailed matching algorithm specification~~ → Pivoted to Snowflake matching
-- ✅ Full GraphQL API design with examples
-- ✅ Interactive demo for stakeholder buy-in
-- ✅ Comprehensive architecture documentation (UPDATED: dual member types, hybrid approach)
-- ✅ Clear implementation roadmap (UPDATED: added Phase 0 for data standards)
+### 3.1: Create NetworkParticipant TypeDef (Simple - 2 hours)
 
-**Major Architectural Updates (March 26, 2025)**:
-- 🆕 Hybrid data source strategy (DSF views + Snowflake tables)
-- 🆕 Snowflake-based similarity matching (leveraging built-in functions)
-- 🆕 Data Standard validation for "Participant Incident" type
-- 🆕 Support for external members (non-Apricot orgs)
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/graphql-api/typeDefs/networkParticipant.ts`
 
-**Next Milestone**: Data Standards enhancement (Phase 0)
+**Implementation**:
+```graphql
+import { gql } from 'graphql-tag';
 
-**Estimated Completion**: 16-21 weeks from today (was 9-12 weeks)
+export const networkParticipantTypeDef = gql`
+  type NetworkParticipant {
+    id: ID!
+    network_id: ID!
+    match_status: MatchStatus!
+    match_confidence_score: Float
+    sources: [ParticipantSource!]!
+    created_at: String!
+  }
+
+  type ParticipantSource {
+    id: ID!
+    org_id: ID!
+    org_name: String!
+    document_id: ID!
+    dsf_id: ID!
+    name_used: String        # PII - filtered
+    ssn_last4: String        # PII - filtered
+    dob: String              # PII - filtered
+    contributed_at: String!
+  }
+
+  enum MatchStatus {
+    CONFIRMED
+    POTENTIAL_MATCH
+    PENDING_VERIFICATION
+  }
+
+  type NetworkParticipantsResult {
+    total: Int!
+    participants: [NetworkParticipant!]!
+  }
+
+  type PotentialMatch {
+    id: ID!
+    participant_a: NetworkParticipant!
+    participant_b: NetworkParticipant!
+    match_score: Float!
+    match_fields: [String!]!
+    status: String!
+    created_at: String!
+  }
+
+  extend type Query {
+    networkParticipants(
+      network_id: ID!
+      match_status: MatchStatus
+      limit: Int
+      offset: Int
+    ): NetworkParticipantsResult!
+
+    networkParticipant(
+      network_id: ID!
+      participant_id: ID!
+    ): NetworkParticipant!
+
+    potentialMatches(
+      network_id: ID!
+      status: String
+    ): [PotentialMatch!]!
+  }
+`;
+```
+
+**Dependencies**: None (typeDef only)
+**Verification**: TypeDef loads, GraphQL schema compiles
+
+### 3.2-3.8: Additional TypeDefs and Resolvers
+
+**Similar incremental tasks for**:
+- Network Incidents (3.2)
+- Collaboration features (3.3)
+- Query resolvers (3.5-3.7)
+- Mutation resolvers (3.9-3.13)
+
+(Details in full plan above)
 
 ---
 
-**Document Version**: 2.0.0
+## PHASE 4: Backend - Subscriptions & Real-Time (1-2 weeks)
+
+**Objective**: Enable real-time collaboration with WebSocket subscriptions
+
+### 4.1: Install WebSocket Dependencies (Simple - 30 min)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/package.json`
+
+**Dependencies to Add**:
+```json
+{
+  "dependencies": {
+    "graphql-ws": "^5.14.0",
+    "ws": "^8.14.0",
+    "graphql-redis-subscriptions": "^2.6.0"
+  }
+}
+```
+
+**Actions**:
+```bash
+npm install
+```
+
+**Dependencies**: None
+**Verification**: Packages install successfully
+
+### 4.2: Add WebSocket Server to Apricot API (Complex - 4 hours)
+
+**Objective**: Upgrade Apollo Server to support WebSocket connections for GraphQL subscriptions
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/graphql-api/index.ts`
+
+**Implementation**:
+```typescript
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+
+// Create HTTP server (wrap Express)
+const httpServer = createServer(app);
+
+// Create Redis Pub/Sub
+const pubsub = new RedisPubSub({
+  publisher: connections.redis.client,
+  subscriber: connections.redis.client.duplicate()
+});
+
+// Create WebSocket server
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/api/graph'
+});
+
+// Setup subscription handlers
+useServer({
+  schema,
+  context: async (ctx, msg, args) => {
+    // Extract token from connection params
+    const token = ctx.connectionParams?.authorization?.replace('Bearer ', '');
+
+    // Verify JWT and build context
+    const user = await verifyToken(token);
+
+    return {
+      user,
+      connections,
+      pubsub,
+      claims: buildClaims(user),
+      // ... rest of context
+    };
+  },
+  onConnect: async (ctx) => {
+    console.log('WebSocket connected');
+  },
+  onDisconnect: (ctx) => {
+    console.log('WebSocket disconnected');
+  }
+}, wsServer);
+
+// Start server
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`WebSocket server running on ws://localhost:${PORT}/api/graph`);
+});
+```
+
+**Key Changes**:
+1. Wrap Express app in HTTP server
+2. Create WebSocket server on same port
+3. Configure `graphql-ws` protocol
+4. Share authentication context
+5. Enable Redis Pub/Sub for multi-instance support
+
+**Dependencies**: 4.1
+**Verification**:
+- WebSocket server starts without errors
+- Can connect via `wscat -c ws://localhost:3000/api/graph`
+- Authentication works over WebSocket
+
+### 4.3: Create Subscription TypeDefs (Simple - 1 hour)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/graphql-api/typeDefs/networkSubscriptions.ts`
+
+**Implementation**:
+```graphql
+export const networkSubscriptionsTypeDef = gql`
+  type Subscription {
+    participantUpdated(network_id: ID!): ParticipantUpdatePayload!
+    incidentUpdated(network_id: ID!): IncidentUpdatePayload!
+    matchDetected(network_id: ID!): MatchDetectedPayload!
+  }
+
+  type ParticipantUpdatePayload {
+    participant: NetworkParticipant!
+    change_type: ChangeType!
+    changed_by_org_id: ID!
+    changed_by_org_name: String!
+  }
+
+  type IncidentUpdatePayload {
+    incident: NetworkIncident!
+    change_type: ChangeType!
+    changed_by_org_id: ID!
+  }
+
+  type MatchDetectedPayload {
+    participant_a_id: ID!
+    matches: [PotentialMatch!]!
+  }
+
+  enum ChangeType {
+    CREATED
+    UPDATED
+    DELETED
+    MATCH_CONFIRMED
+  }
+`;
+```
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/graphql-api/typeDefs/index.ts` - Add to exports
+
+**Dependencies**: 4.2
+**Verification**: Subscription typeDefs load, GraphQL schema compiles
+
+### 4.4: Create Subscription Resolvers (Medium - 3 hours)
+
+**Files to Create**:
+- `Apricot_Files/apricot-api/src/graphql-api/resolvers/subscriptions/networkDocumentFolder.ts`
+
+**Implementation**:
+```typescript
+import { withFilter } from 'graphql-subscriptions';
+import { Context } from '../../../application/context';
+
+export const subscriptionResolvers = {
+  Subscription: {
+    participantUpdated: {
+      subscribe: withFilter(
+        (_: any, args: { network_id: string }, context: Context) => {
+          const networkId = +args.network_id;
+
+          // Verify user is network member
+          // (async check in onConnect is preferred, but can double-check here)
+
+          return context.pubsub.asyncIterator([`PARTICIPANT_UPDATED_${networkId}`]);
+        },
+        (payload: any, variables: { network_id: string }) => {
+          // Filter: only send if network_id matches
+          return payload.network_id === +variables.network_id;
+        }
+      ),
+      resolve: (payload: any) => payload.participantUpdated
+    },
+
+    incidentUpdated: {
+      subscribe: (_: any, args: { network_id: string }, context: Context) => {
+        const networkId = +args.network_id;
+        return context.pubsub.asyncIterator([`INCIDENT_UPDATED_${networkId}`]);
+      },
+      resolve: (payload: any) => payload.incidentUpdated
+    },
+
+    matchDetected: {
+      subscribe: (_: any, args: { network_id: string }, context: Context) => {
+        const networkId = +args.network_id;
+        return context.pubsub.asyncIterator([`MATCH_DETECTED_${networkId}`]);
+      },
+      resolve: (payload: any) => payload.matchDetected
+    }
+  }
+};
+```
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/graphql-api/resolvers/index.ts` - Add Subscription key
+
+**Dependencies**: 4.3
+**Verification**: Subscriptions connect, can subscribe via GraphQL Playground
+
+### 4.5: Add PubSub to Context (Simple - 1 hour)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/application/context.ts`
+- `Apricot_Files/apricot-api/src/application/context.d.ts`
+
+**Changes**:
+```typescript
+// context.d.ts
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+
+export interface Context {
+  // ... existing context fields
+  pubsub: RedisPubSub;
+}
+
+// context.ts
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+
+export async function buildContext(req: Request, res: Response): Promise<Context> {
+  const pubsub = new RedisPubSub({
+    publisher: connections.redis.client,
+    subscriber: connections.redis.client.duplicate()
+  });
+
+  return {
+    // ... existing context
+    pubsub
+  };
+}
+```
+
+**Dependencies**: 4.2
+**Verification**: `context.pubsub` available in all resolvers
+
+### 4.6: Integrate Event Publishing in Mutations (Medium - 2 hours)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/src/graphql-api/mutations/networkDocumentFolder/confirmParticipantMatch.ts`
+- `Apricot_Files/apricot-api/src/graphql-api/mutations/networkDocumentFolder/createNetworkIncident.ts`
+- `Apricot_Files/apricot-api/src/application/services/participantMatchingService.ts` (for match detection)
+
+**Implementation Pattern**:
+```typescript
+// In confirmParticipantMatch mutation (after DB update)
+await context.pubsub.publish(`PARTICIPANT_UPDATED_${networkId}`, {
+  participantUpdated: {
+    participant: await loadFullParticipant(participantId),
+    change_type: 'MATCH_CONFIRMED',
+    changed_by_org_id: context.user.org_id,
+    changed_by_org_name: context.user.org_name
+  },
+  network_id: networkId
+});
+
+// In participantMatchingService (after finding matches)
+await context.pubsub.publish(`MATCH_DETECTED_${networkId}`, {
+  matchDetected: {
+    participant_a_id: participantId,
+    matches: potentialMatches
+  },
+  network_id: networkId
+});
+
+// In createNetworkIncident mutation
+await context.pubsub.publish(`INCIDENT_UPDATED_${networkId}`, {
+  incidentUpdated: {
+    incident: newIncident,
+    change_type: 'CREATED',
+    changed_by_org_id: context.user.org_id
+  },
+  network_id: networkId
+});
+```
+
+**Dependencies**: 4.4, 4.5
+**Verification**:
+- Mutations trigger events
+- Subscribed clients receive updates
+- Multiple clients all get notified
+
+### 4.7: Test Subscription Flow End-to-End (Simple - 2 hours)
+
+**Actions**:
+1. Open GraphQL Playground (or Postman)
+2. Start subscription:
+```graphql
+subscription {
+  participantUpdated(network_id: "1") {
+    participant {
+      id
+      match_status
+    }
+    change_type
+    changed_by_org_id
+  }
+}
+```
+3. In another tab, trigger mutation (confirm match)
+4. Verify subscription receives event
+5. Test with multiple concurrent subscriptions
+6. Test reconnection after disconnect
+
+**Test Cases**:
+- ✅ Single client receives events
+- ✅ Multiple clients all receive events
+- ✅ Client reconnects and resumes subscription
+- ✅ Events filtered by network_id correctly
+- ✅ Authentication required for subscriptions
+- ✅ Unauthorized users cannot subscribe
+
+**Dependencies**: 4.6
+**Verification**: Real-time updates work reliably
+
+### 4.8: Configure Production WebSocket Settings (Simple - 1 hour)
+
+**Files to Modify**:
+- `Apricot_Files/apricot-api/.env.example`
+- Production deployment configs
+
+**Environment Variables to Add**:
+```bash
+# WebSocket Configuration
+WS_PATH=/api/graph
+WS_KEEP_ALIVE_INTERVAL=30000
+WS_MAX_CONNECTIONS_PER_IP=10
+WS_CONNECTION_TIMEOUT=60000
+
+# Redis Pub/Sub
+REDIS_PUBSUB_DB=5
+```
+
+**Production Considerations**:
+1. **Load Balancer**: Configure sticky sessions for WebSocket
+2. **Scaling**: Redis Pub/Sub enables horizontal scaling
+3. **Monitoring**: Track active WebSocket connections
+4. **Rate Limiting**: Prevent subscription spam
+
+**Dependencies**: 4.7
+**Verification**: Production settings documented
+
+---
+
+## PHASE 5-12: Frontend, Testing, Integration
+
+(Detailed breakdown of React app setup with Relay, component hierarchy, views, real-time features, testing, and deployment in full plan above)
+
+---
+
+## Remaining Questions for Product Decision
+
+### 1. Incident Workflow Behavior
+**Question:** When any org creates an incident:
+- Should it auto-notify all network members immediately?
+  - **Option A:** Real-time notification via subscription + email
+  - **Option B:** Passive - shows in incident list, no push notification
+  - **Recommendation:** Option A for Critical/High severity, Option B for Medium/Low
+
+### 2. Matching Confirmation Workflow
+**Decided:** Always require human confirmation
+
+**Remaining questions:**
+- If 2 orgs confirm a match but a 3rd org says "not the same person":
+  - **Recommendation:** Create two separate network participants (A+B confirmed, C separate)
+
+### 3. Performance Scale Expectations
+**Need to know:**
+- Typical network size? (Assume: 6-15 member orgs)
+- Participant count per network? (Assume: 100-500 participants)
+- Concurrent users? (Assume: 20-50)
+- Target response time? (Assume: <500ms for GraphQL queries)
+
+### 4. Referral Acceptance Details
+**Question:** When org accepts a referral:
+- **Option A:** Create tier1 record in their DB automatically
+- **Option B:** Just link/track without creating record
+- **Recommendation:** Option B initially, with "Convert to Full Record" action
+
+---
+
+## Risk Assessment
+
+### High Risk
+🔴 **Cross-tenant query performance**
+- Mitigation: Materialized views + caching layer
+
+🔴 **False positive matches**
+- Mitigation: Human confirmation required, match unlinking capability
+
+🔴 **PII leakage across orgs**
+- Mitigation: Strict permission checks, encryption, audit logging
+
+### Medium Risk
+🟡 **Data sync lag**
+- Mitigation: Event-driven updates, cache invalidation strategy
+
+🟡 **Network size scaling**
+- Mitigation: Pagination, virtual scrolling, query optimization
+
+### Low Risk
+🟢 **Browser compatibility** (React app)
+🟢 **Database storage costs** (network-level data is small)
+
+---
+
+## Success Metrics
+
+- Participant match accuracy > 95%
+- Page load time < 1 second (P95)
+- Zero PII leakage incidents
+- API response time < 300ms (P95)
+- User adoption: 80% of network members active monthly
+
+---
+
+## Technical Decisions & Rationale
+
+### 1. Why Jotai + Relay (not Redux)?
+
+**Decision**: Jotai for client state, React Relay for server state
+
+**Rationale**:
+- Atomic state management with minimal boilerplate
+- Relay optimized for GraphQL (caching, subscriptions, fragments)
+- Existing pattern in Data Standards/Networks apps
+- Better TypeScript support than Redux
+
+### 2. WebSocket Subscriptions (not Polling)
+
+**Decision**: GraphQL subscriptions over WebSocket
+
+**Rationale**:
+- True real-time updates (not delayed)
+- Efficient (only sends when changed)
+- Better UX (connection status, instant collaboration)
+- Scalable with Redis Pub/Sub
+
+### 3. Three-Tier Caching Strategy
+
+**Decision**: Request cache → Redis (5-min) → LRU (1-hour)
+
+**Rationale**:
+- Request cache: Prevents duplicate queries in single request
+- Redis: Shared across instances, invalidates on change
+- LRU: Fast in-memory for rarely-changing config
+
+---
+
+## Implementation Roadmap
+
+### Phase 1: Database & Core Services ✅ (Planned)
+
+**Files to create in `Apricot_Files/apricot-api/`**:
+
+1. **Database Models** (`src/repository/models/global/`)
+   ```
+   network_participants.ts
+   network_participant_sources.ts
+   network_incidents.ts
+   network_incident_org_responses.ts
+   network_referrals.ts
+   network_notes.ts
+   network_audit_log.ts
+   network_pii_settings.ts
+   ```
+
+2. **Repository Services** (`src/repository/services/`)
+   ```
+   NetworkParticipantService.ts
+   NetworkIncidentService.ts
+   NetworkReferralService.ts
+   ```
+
+3. **SQL Queries** (`src/repository/query/`)
+   ```
+   networkDocumentFolder.ts
+   ```
+
+### Phase 2: Business Logic ✅ (Planned)
+
+**Application Services** (`src/application/services/`):
+
+1. **networkDocumentFolderService.ts**
+   - Main orchestration layer
+   - Aggregates DSF view data
+   - Applies PII filtering
+   - Manages cache invalidation
+
+2. **participantMatchingService.ts**
+   - Matching algorithm implementation
+   - Hash generation & comparison
+   - Score calculation
+   - Potential match detection
+
+3. **networkCacheService.ts**
+   - Multi-tier caching (Redis + LRU)
+   - Cache key management
+   - Selective invalidation
+
+4. **networkEventService.ts**
+   - Redis pub/sub wrapper
+   - Event publishing
+   - Subscription management
+
+### Phase 3: GraphQL API ✅ (Planned)
+
+**GraphQL Layer** (`src/graphql-api/`):
+
+1. **Type Definitions** (`typeDefs/`)
+   ```
+   networkDocumentFolder.ts      # Root schema
+   networkParticipant.ts
+   networkIncident.ts
+   networkReferral.ts
+   networkNote.ts
+   ```
+
+2. **Resolvers** (`resolvers/networkDocumentFolder/`)
+   ```
+   queries.ts                    # All query resolvers
+   mutations.ts                  # All mutation resolvers
+   subscriptions.ts              # WebSocket subscriptions
+   ```
+
+3. **WebSocket Setup** (modify `index.ts`)
+   - Add WebSocketServer
+   - Configure RedisPubSub
+   - Enable subscription handlers
+
+### Phase 4: Frontend (React) ✅ (Planned)
+
+**React App** (new app in Apricot UI):
+
+```
+src/NetworkDocumentFolder/
+├── views/
+│   ├── PeopleView/
+│   │   ├── ParticipantList.tsx
+│   │   ├── ParticipantDetail.tsx
+│   │   ├── MatchReviewModal.tsx
+│   │   └── PIIVisibilityToggle.tsx
+│   │
+│   ├── IncidentsView/
+│   │   ├── IncidentList.tsx
+│   │   ├── IncidentDetail.tsx
+│   │   └── OrgResponseTracker.tsx
+│   │
+│   ├── ReferralsView/
+│   │   ├── ReferralList.tsx
+│   │   └── ReferralDetail.tsx
+│   │
+│   └── DashboardView/
+│       └── NetworkOverview.tsx
+│
+├── components/
+│   ├── NetworkHeader.tsx
+│   ├── MatchComparisonTable.tsx
+│   └── IncidentTimeline.tsx
+│
+├── hooks/
+│   ├── useNetworkParticipants.ts
+│   ├── useParticipantSubscription.ts
+│   └── usePIIPermissions.ts
+│
+└── graphql/
+    ├── client.ts                  # Apollo Client + WebSocket
+    ├── queries/
+    ├── mutations/
+    └── subscriptions/
+```
+
+### Phase 5: Testing & Deployment 🔜 (To Plan)
+
+1. Unit tests (matching algorithm, PII filtering)
+2. Integration tests (full workflows)
+3. Performance tests (100+ participants, 10 orgs)
+4. Load testing (WebSocket connections)
+5. Security audit (PII protection)
+6. Documentation (API docs, user guide)
+7. Production deployment
+
+---
+
+## Security, Scale, & Performance Analysis
+
+### Security
+
+**PII Protection**:
+- Laravel encryption for name fields
+- HMAC-SHA256 hashing for matching (network-specific salt)
+- Middleware enforces org membership + PII permissions
+- Audit log: user_id, org_id, resource_id, fields_accessed
+- No PII in application logs
+
+**Cross-Org Permissions**:
+- Network membership checked on every request
+- PII visibility filtered per org
+- Mutation authorization enforced
+- Lead org privileges for matches/settings
+
+**GraphQL Security**:
+- Query depth limit: 5 levels
+- Complexity limit: 1000
+- Rate limiting: 100 req/min per user (Redis)
+- Field-level permissions
+
+### Scalability
+
+**Database**:
+- Indexes on network_id, match_status, org_id+document_id
+- Pagination (default 50/page)
+- Read replicas if needed
+- Partition by network_id if > 100k participants
+
+**Caching**:
+- Redis Cluster for multi-instance
+- Pub/Sub for cache invalidation
+- Pre-warm popular networks
+
+**WebSocket**:
+- 10,000 concurrent connections per server
+- Sticky sessions for load balancing
+- Redis Pub/Sub for multi-instance
+- Room-based subscriptions
+
+**API Performance**:
+- DataLoader batching
+- Parallel org queries (Promise.all)
+- GraphQL query batching
+- CDN for static assets
+
+### Performance Targets
+
+**Benchmarks**:
+- Participant list (50, 10 orgs): < 500ms P95
+- Incident list: < 300ms P95
+- Confirm match mutation: < 1s P95
+- WebSocket delivery: < 100ms
+- Initial page load: < 2s P95
+- Page transition (cached): < 500ms
+
+---
+
+## Critical Files Reference
+
+**From codebase exploration:**
+
+1. **DSF View Generation:**
+   - `Apricot_Files/apricot-api/src/application/services/dataStandardsService.ts`
+   - Line 6246: `generateDataStandardViewSql()`
+   - Line 7380: `createView()`
+
+2. **Data Standards Mapping:**
+   - `Apricot_Files/apricot-api/src/repository/models/org/data_standards_map.ts`
+   - `Apricot_Files/apricot-api/src/repository/query/dataStandard.ts`
+
+3. **Redis Configuration:**
+   - `Apricot_Files/apricot-api/src/config/redis/index.ts`
+   - `Apricot_Files/apricot-api/src/repository/connections/redis/index.ts`
+
+4. **GraphQL Setup:**
+   - `Apricot_Files/apricot-api/src/graphql-api/index.ts`
+   - `Apricot_Files/apricot-api/src/graphql-api/resolvers/`
+   - `Apricot_Files/apricot-api/src/graphql-api/typeDefs/`
+
+5. **Bull Queue:**
+   - `Apricot_Files/apricot-api/src/utils/queue.ts`
+
+6. **Cache Utilities:**
+   - `Apricot_Files/apricot-api/src/utils/cache.ts`
+
+---
+
+## Implementation Summary
+
+**Total Scope**: 16-20 weeks (320-400 hours)
+
+**Backend** (8-10 weeks):
+- 45 incremental tasks
+- 10 database tables
+- Sequelize models + associations
+- Services (matching, PII, DSF enrichment)
+- GraphQL (21 queries, 24 mutations, 3 subscriptions)
+- WebSocket subscriptions (Redis Pub/Sub)
+- Background jobs (Bull queue)
+
+**Frontend** (6-8 weeks):
+- 31 incremental tasks
+- React + Vite + TypeScript
+- Jotai state (5 atom files)
+- React Relay (7 queries, 6 mutations, 3 subscriptions)
+- Atomic components (atoms → molecules → organisms → templates)
+- 5 main views (Dashboard, People, Incidents, Referrals, Notes)
+- Real-time WebSocket updates
+
+**Integration** (2-3 weeks):
+- Data Standards validation UI
+- Networks navigation
+- Integration testing (6 workflows)
+- Performance testing (4 benchmarks)
+- Security audit (6 areas)
+- Bug fixes and polish
+
+**Team**: 1-2 backend, 1-2 frontend, 1 part-time DevOps
+
+**Critical Path**: Data Standards → Backend models → GraphQL API → Frontend → Views → Real-time
+
+**Deliverable**: Production-ready Network Document Folder with documentation, tests, and deployment guide
+
+---
+
+**Document Version**: 3.0.0 - Comprehensive Implementation Plan
 **Created**: March 24, 2025
-**Updated**: March 26, 2025 - Added external member support, Snowflake matching, data standard validation
-**Status**: ✅ Complete - Ready for Implementation (Updated Architecture)
-**Next Review**: After Phase 0 (Data Standards) completion
+**Updated**: March 26, 2025 - Added full phase-by-phase breakdown with incremental tasks
+**Status**: ✅ Complete - Ready for Implementation

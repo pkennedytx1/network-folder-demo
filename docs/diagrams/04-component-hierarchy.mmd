@@ -1,0 +1,158 @@
+%% Component Hierarchy Diagram
+%% Shows the structure of frontend and backend components
+
+graph TB
+    subgraph "Frontend Components (React)"
+        App["App Shell<br/>(Routing)"]
+
+        subgraph "Views (Pages)"
+            Dashboard["Dashboard View<br/>- Network overview<br/>- Activity feed<br/>- Quick stats"]
+            People["People View<br/>- Participant list<br/>- Match review"]
+            Incidents["Incidents View<br/>- Incident list<br/>- Org responses"]
+            Referrals["Referrals View<br/>- Referral tracking"]
+            Notes["Notes View<br/>- Collaboration notes"]
+        end
+
+        subgraph "Organisms (Complex Components)"
+            Header["Network Header<br/>- Network selector<br/>- Connection status<br/>- User menu"]
+            ParticipantList["Participant List<br/>- Virtual scrolling<br/>- Filters<br/>- Search"]
+            MatchReviewModal["Match Review Modal<br/>- Side-by-side comparison<br/>- Score breakdown<br/>- Confirm/Reject actions"]
+            IncidentTimeline["Incident Timeline<br/>- Event history<br/>- Multi-org responses"]
+            OrgResponseTracker["Org Response Tracker<br/>- Status per org<br/>- Action tracking"]
+        end
+
+        subgraph "Molecules (Composite Components)"
+            ParticipantCard["Participant Card<br/>- Avatar<br/>- Name + PII<br/>- Match status"]
+            IncidentCard["Incident Card<br/>- Severity badge<br/>- Participants<br/>- Org count"]
+            FilterBar["Filter Bar<br/>- Multiple filters<br/>- Clear all"]
+            SearchInput["Search Input<br/>- Debounced<br/>- Clear button"]
+        end
+
+        subgraph "Atoms (Basic Components)"
+            Button["Button<br/>- Variants<br/>- Sizes<br/>- Icons"]
+            Badge["Badge<br/>- Status colors<br/>- Severity levels"]
+            StatusDot["Status Dot<br/>- Connected/syncing"]
+            PIIToggle["PII Toggle<br/>- Show/hide switch"]
+        end
+
+        subgraph "Hooks (State & Logic)"
+            useParticipants["useNetworkParticipants<br/>- Fetch + cache<br/>- Real-time updates"]
+            useSubscription["useParticipantSubscription<br/>- WebSocket connection<br/>- Event handling"]
+            usePII["usePIIPermissions<br/>- Check visibility<br/>- Filter fields"]
+            useConnection["useConnectionStatus<br/>- Monitor WS<br/>- Reconnect logic"]
+        end
+
+        subgraph "GraphQL (Relay)"
+            Queries["Queries<br/>- NetworkParticipantsQuery<br/>- NetworkIncidentsQuery<br/>- PotentialMatchesQuery"]
+            Mutations["Mutations<br/>- ConfirmMatchMutation<br/>- CreateIncidentMutation<br/>- UpdateResponseMutation"]
+            Subscriptions["Subscriptions<br/>- ParticipantUpdatedSub<br/>- IncidentUpdatedSub<br/>- MatchDetectedSub"]
+        end
+    end
+
+    subgraph "Backend Services (Node.js)"
+        subgraph "GraphQL Layer"
+            ApolloServer["Apollo Server<br/>- HTTP endpoint<br/>- WebSocket endpoint"]
+            TypeDefs["Type Definitions<br/>- Schema<br/>- Enums<br/>- Interfaces"]
+            Resolvers["Resolvers<br/>- Queries<br/>- Mutations<br/>- Subscriptions"]
+        end
+
+        subgraph "Application Services"
+            NDFService["NetworkDocumentFolderService<br/>- Orchestration<br/>- DSF enrichment<br/>- Cache management"]
+            MatchService["ParticipantMatchingService<br/>- Scoring algorithm<br/>- Hash generation<br/>- Match detection"]
+            PIIService["NetworkPIIService<br/>- Permission checks<br/>- Field filtering<br/>- Audit logging"]
+            CacheService["NetworkCacheService<br/>- Multi-tier cache<br/>- Invalidation<br/>- TTL management"]
+            EventService["NetworkEventService<br/>- Redis Pub/Sub<br/>- Event broadcasting"]
+        end
+
+        subgraph "Repository Layer"
+            Models["Sequelize Models<br/>- NetworkParticipant<br/>- NetworkIncident<br/>- NetworkReferral<br/>- etc."]
+            Queries["Repository Queries<br/>- Raw SQL<br/>- DSF view queries<br/>- Cross-tenant joins"]
+        end
+
+        subgraph "Infrastructure"
+            Redis["Redis Client<br/>- Cache operations<br/>- Pub/Sub channels"]
+            BullQueue["Bull Queue<br/>- Background jobs<br/>- Matching worker"]
+        end
+    end
+
+    %% Frontend relationships
+    App --> Dashboard
+    App --> People
+    App --> Incidents
+    App --> Referrals
+    App --> Notes
+
+    Dashboard --> Header
+    People --> Header
+    People --> ParticipantList
+    People --> MatchReviewModal
+
+    Incidents --> IncidentTimeline
+    Incidents --> OrgResponseTracker
+
+    ParticipantList --> ParticipantCard
+    ParticipantList --> FilterBar
+    ParticipantList --> SearchInput
+
+    MatchReviewModal --> ParticipantCard
+    MatchReviewModal --> Button
+    MatchReviewModal --> Badge
+
+    FilterBar --> Button
+    SearchInput --> Button
+
+    ParticipantCard --> Badge
+    ParticipantCard --> StatusDot
+    ParticipantCard --> PIIToggle
+
+    %% Frontend hooks
+    People --> useParticipants
+    People --> useSubscription
+    ParticipantCard --> usePII
+    Header --> useConnection
+
+    %% Frontend GraphQL
+    useParticipants --> Queries
+    MatchReviewModal --> Mutations
+    useSubscription --> Subscriptions
+
+    %% Backend relationships
+    Queries --> ApolloServer
+    Mutations --> ApolloServer
+    Subscriptions --> ApolloServer
+
+    ApolloServer --> TypeDefs
+    ApolloServer --> Resolvers
+
+    Resolvers --> NDFService
+    Resolvers --> MatchService
+    Resolvers --> PIIService
+
+    NDFService --> MatchService
+    NDFService --> PIIService
+    NDFService --> CacheService
+    NDFService --> EventService
+
+    NDFService --> Models
+    NDFService --> Queries
+
+    MatchService --> Models
+    PIIService --> Models
+
+    CacheService --> Redis
+    EventService --> Redis
+    MatchService --> BullQueue
+
+    %% Styling
+    classDef frontend fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef backend fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class App,Dashboard,People,Incidents,Referrals,Notes,Header,ParticipantList,MatchReviewModal,IncidentTimeline,OrgResponseTracker,ParticipantCard,IncidentCard,FilterBar,SearchInput,Button,Badge,StatusDot,PIIToggle,useParticipants,useSubscription,usePII,useConnection,Queries,Mutations,Subscriptions frontend
+
+    class ApolloServer,TypeDefs,Resolvers backend
+
+    class NDFService,MatchService,PIIService,CacheService,EventService,Models,Queries service
+
+    class Redis,BullQueue infra

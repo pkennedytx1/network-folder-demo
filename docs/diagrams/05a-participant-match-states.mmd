@@ -1,0 +1,61 @@
+%% State Machine: Participant Match States
+%% Shows the lifecycle of a participant match in the network
+
+stateDiagram-v2
+    [*] --> PendingVerification: New participant<br/>added to network
+
+    PendingVerification --> MatchingInProgress: Background job<br/>starts matching
+
+    MatchingInProgress --> NoMatchFound: Match score < 70
+    MatchingInProgress --> PotentialMatch: Match score 70-89
+    MatchingInProgress --> HighConfidence: Match score >= 90
+
+    NoMatchFound --> UniqueParticipant: Create as<br/>standalone participant
+    UniqueParticipant --> [*]: Active participant
+
+    PotentialMatch --> UnderReview: User views<br/>comparison
+
+    UnderReview --> MatchConfirmed: User clicks<br/>"Confirm Match"
+    UnderReview --> MatchRejected: User clicks<br/>"Reject Match"
+    UnderReview --> FlaggedForReview: User clicks<br/>"Needs Review"
+
+    HighConfidence --> UnderReview: Requires human<br/>confirmation<br/>(never auto-merge)
+
+    MatchConfirmed --> Linked: Link sources to<br/>network participant
+    Linked --> AuditLogged: Log confirmation<br/>in audit trail
+    AuditLogged --> CacheInvalidated: Invalidate network<br/>participant cache
+    CacheInvalidated --> EventPublished: Publish<br/>PARTICIPANT_UPDATED
+    EventPublished --> [*]: Active matched<br/>participant
+
+    MatchRejected --> RejectionLogged: Log rejection<br/>with reason
+    RejectionLogged --> SeparateParticipants: Create separate<br/>network participants
+    SeparateParticipants --> [*]: Active as<br/>distinct participants
+
+    FlaggedForReview --> AdminNotified: Notify network<br/>admin
+    AdminNotified --> UnderReview: Admin reviews
+
+    note right of MatchingInProgress
+        Scoring Algorithm:
+        - SSN hash match: 45 points
+        - DOB hash match: 35 points
+        - Name similarity: 30 points
+        Total: 0-110 points
+    end note
+
+    note right of MatchConfirmed
+        Actions on confirmation:
+        1. Update match_status = 'confirmed'
+        2. Link sources to participant
+        3. Remove from potential_matches
+        4. Insert audit log entry
+        5. Invalidate cache
+        6. Publish real-time event
+    end note
+
+    note right of UnderReview
+        User sees:
+        - Side-by-side comparison
+        - Score breakdown
+        - Matching fields highlighted
+        - PII (if permission granted)
+    end note

@@ -1,0 +1,101 @@
+%% State Machine: Incident Response Workflow
+%% Shows the multi-org incident response tracking lifecycle
+
+stateDiagram-v2
+    [*] --> Reported: Org reports<br/>new incident
+
+    Reported --> NotificationSent: Publish to<br/>all network members
+
+    NotificationSent --> MultiOrgResponse: All orgs see incident
+
+    state MultiOrgResponse {
+        [*] --> NotStarted
+
+        NotStarted --> InProgress: Org begins<br/>response
+
+        InProgress --> InProgress: Update actions:<br/>- Plan actions<br/>- Current work<br/>- Completed work
+
+        InProgress --> Complete: All actions<br/>completed
+
+        Complete --> [*]
+
+        note right of InProgress
+            Each org tracks:
+            - Planned actions (JSON)
+            - Current actions (JSON)
+            - Completed actions (JSON)
+            - Last updated timestamp
+        end note
+    }
+
+    MultiOrgResponse --> AllOrgsResponded: Check if all orgs<br/>have responded
+
+    AllOrgsResponded --> IncidentResolved: All orgs marked<br/>as complete
+
+    IncidentResolved --> Archived: Archive after<br/>30 days
+
+    Archived --> [*]
+
+    state "Incident Status Checks" as StatusChecks {
+        Critical --> NotificationImmediate: Send email +<br/>push notification
+        High --> NotificationImmediate
+        Medium --> NotificationPassive: Show in feed only
+        Low --> NotificationPassive
+
+        note right of Critical
+            Severity Levels:
+            - Critical: Immediate threat
+            - High: Urgent response needed
+            - Medium: Needs attention
+            - Low: Informational
+        end note
+    }
+
+    Reported --> StatusChecks: Determine<br/>notification strategy
+    StatusChecks --> NotificationSent
+
+    state "Parallel Org Responses" as ParallelResponses {
+        state "Org A Response" as OrgA {
+            [*] --> A_NotStarted
+            A_NotStarted --> A_InProgress
+            A_InProgress --> A_Complete
+            A_Complete --> [*]
+        }
+
+        state "Org B Response" as OrgB {
+            [*] --> B_NotStarted
+            B_NotStarted --> B_InProgress
+            B_InProgress --> B_Complete
+            B_Complete --> [*]
+        }
+
+        state "Org C Response" as OrgC {
+            [*] --> C_NotStarted
+            C_NotStarted --> C_InProgress
+            C_InProgress --> C_Complete
+            C_Complete --> [*]
+        }
+
+        note right of OrgA
+            Each org independently
+            tracks their response
+            without blocking others
+        end note
+    }
+
+    MultiOrgResponse --> ParallelResponses: Track responses<br/>per org
+    ParallelResponses --> AllOrgsResponded
+
+    note right of MultiOrgResponse
+        Real-time updates:
+        - Org A updates → broadcast to all
+        - Org B sees update instantly
+        - No page refresh needed
+    end note
+
+    note left of IncidentResolved
+        Resolution criteria:
+        - All orgs marked complete
+        - OR manually closed by lead org
+        - OR auto-closed after 90 days
+    end note

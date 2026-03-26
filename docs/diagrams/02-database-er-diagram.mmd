@@ -1,0 +1,140 @@
+%% Database Entity Relationship Diagram
+%% Network Document Folder - Database Schema
+
+erDiagram
+    networks ||--o{ network_participants : contains
+    networks ||--o{ network_incidents : contains
+    networks ||--o{ network_referrals : contains
+    networks ||--o{ network_notes : contains
+    networks ||--o{ network_pii_settings : configures
+
+    network_participants ||--o{ network_participant_sources : "has sources"
+    network_participants ||--o{ network_participant_potential_matches : "matches with"
+    network_participants ||--o{ network_incident_participants : "involved in"
+    network_participants ||--o{ network_referrals : "subject of"
+
+    network_incidents ||--o{ network_incident_org_responses : "tracked by orgs"
+    network_incidents ||--o{ network_incident_participants : "involves"
+    network_incidents ||--o{ network_notes : "has notes"
+
+    network_participants ||--o{ network_notes : "has notes"
+
+    organizations ||--o{ network_participant_sources : contributes
+    organizations ||--o{ network_incident_org_responses : responds
+    organizations ||--o{ network_referrals : "sends/receives"
+    organizations ||--o{ network_pii_settings : "privacy config"
+    organizations ||--o{ network_notes : authors
+
+    network_participants {
+        bigint id PK
+        bigint network_id FK
+        enum match_status
+        decimal match_confidence_score
+        timestamp created_at
+        timestamp confirmed_at
+        bigint confirmed_by_user_id
+        boolean active
+    }
+
+    network_participant_sources {
+        bigint id PK
+        bigint network_participant_id FK
+        bigint org_id FK
+        bigint document_id
+        bigint dsf_id
+        string name_used_encrypted
+        string ssn_last4_hash
+        string dob_hash
+        timestamp contributed_at
+        bigint confirmed_by_org_user_id
+    }
+
+    network_participant_potential_matches {
+        bigint id PK
+        bigint network_id FK
+        bigint participant_a_id FK
+        bigint participant_b_id FK
+        decimal match_score
+        json match_fields
+        enum status
+        timestamp created_at
+    }
+
+    network_incidents {
+        bigint id PK
+        bigint network_id FK
+        string incident_type
+        enum severity
+        string location
+        timestamp occurred_at
+        bigint reported_by_org_id FK
+        text description
+        json tags
+        timestamp created_at
+    }
+
+    network_incident_org_responses {
+        bigint id PK
+        bigint network_incident_id FK
+        bigint org_id FK
+        enum status
+        json planned_actions
+        json current_actions
+        json completed_actions
+        timestamp updated_at
+    }
+
+    network_incident_participants {
+        bigint network_incident_id FK
+        bigint network_participant_id FK
+        string role
+    }
+
+    network_referrals {
+        bigint id PK
+        bigint network_id FK
+        bigint participant_id FK
+        bigint from_org_id FK
+        bigint to_org_id FK
+        text reason
+        enum status
+        enum urgency
+        timestamp created_at
+        timestamp accepted_at
+        timestamp completed_at
+    }
+
+    network_notes {
+        bigint id PK
+        bigint network_id FK
+        bigint author_org_id FK
+        bigint author_user_id FK
+        text content
+        bigint related_participant_id FK
+        bigint related_incident_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    network_pii_settings {
+        bigint id PK
+        bigint network_id FK
+        bigint org_id FK
+        boolean pii_sharing_enabled
+        json fields_shared
+        timestamp consent_confirmed_at
+        bigint confirmed_by_user_id
+    }
+
+    network_audit_log {
+        bigint id PK
+        bigint network_id FK
+        bigint user_id FK
+        bigint org_id FK
+        string action
+        string resource_type
+        bigint resource_id
+        json pii_accessed
+        string ip_address
+        timestamp created_at
+    }

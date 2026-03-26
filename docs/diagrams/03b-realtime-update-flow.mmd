@@ -1,0 +1,63 @@
+%% Sequence Diagram: Real-Time Update Flow
+%% Shows how updates propagate to all connected clients via WebSocket subscriptions
+
+sequenceDiagram
+    actor UserA as User A (Org A)
+    participant ReactA as React App A
+    participant WS as WebSocket Server
+    participant API as GraphQL API
+    participant Redis as Redis Pub/Sub
+    participant DB as Database
+    participant ReactB as React App B
+    actor UserB as User B (Org B)
+
+    Note over UserA,UserB: Initial subscription setup
+
+    UserA->>ReactA: Opens Network Folder
+    ReactA->>WS: WebSocket: CONNECT
+    WS-->>ReactA: Connection established
+
+    ReactA->>WS: Subscribe: participantUpdated(network_id: 1)
+    WS->>Redis: Subscribe to channel:<br/>PARTICIPANT_UPDATED_1
+    WS-->>ReactA: Subscription active
+
+    UserB->>ReactB: Opens Network Folder
+    ReactB->>WS: WebSocket: CONNECT
+    WS-->>ReactB: Connection established
+
+    ReactB->>WS: Subscribe: participantUpdated(network_id: 1)
+    WS->>Redis: Subscribe to channel:<br/>PARTICIPANT_UPDATED_1
+    WS-->>ReactB: Subscription active
+
+    Note over UserA,UserB: User A confirms a participant match
+
+    UserA->>ReactA: Click "Confirm Match"
+    ReactA->>API: Mutation: confirmParticipantMatch
+
+    API->>DB: Update network_participant<br/>SET match_status = 'confirmed'
+    API->>DB: Link sources to participant
+    API->>DB: Remove from potential_matches
+    API->>DB: Insert audit log entry
+
+    DB-->>API: Success
+
+    API->>Redis: DEL network:1:participants<br/>(invalidate cache)
+
+    API->>Redis: PUBLISH PARTICIPANT_UPDATED_1<br/>{participant, change_type, org_id}
+
+    Note over Redis: Redis broadcasts to all subscribers
+
+    Redis->>WS: Event: PARTICIPANT_UPDATED_1
+
+    par Broadcast to all connected clients
+        WS->>ReactA: WebSocket: participantUpdated
+        ReactA->>ReactA: Update local cache
+        ReactA-->>UserA: UI updates (match confirmed ✓)
+
+        WS->>ReactB: WebSocket: participantUpdated
+        ReactB->>ReactB: Update local cache
+        ReactB->>ReactB: Show toast notification
+        ReactB-->>UserB: "Org A confirmed a match"
+    end
+
+    Note over UserA,UserB: Real-time collaboration achieved!

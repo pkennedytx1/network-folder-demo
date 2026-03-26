@@ -1,0 +1,86 @@
+%% System Architecture Diagram
+%% Network Document Folder - Complete System Overview
+
+graph TB
+    subgraph "Client Layer"
+        Browser["Web Browser"]
+        ReactApp["Network Document Folder<br/>React App (Relay)"]
+    end
+
+    subgraph "API Layer"
+        ApolloServer["Apollo GraphQL Server<br/>(HTTP + WebSocket)"]
+        RestAPI["REST API<br/>(Legacy Support)"]
+        WSServer["WebSocket Server<br/>(graphql-ws)"]
+    end
+
+    subgraph "Application Services"
+        NDFS["NetworkDocumentFolderService<br/>(Orchestration)"]
+        PMS["ParticipantMatchingService<br/>(Matching Algorithm)"]
+        PIIS["NetworkPIIService<br/>(Privacy Filtering)"]
+        CacheService["NetworkCacheService<br/>(Multi-tier Caching)"]
+        EventService["NetworkEventService<br/>(Pub/Sub)"]
+    end
+
+    subgraph "Data Layer"
+        subgraph "Global Database"
+            NetworkTables["Network Tables<br/>- network_participants<br/>- network_incidents<br/>- network_referrals<br/>- network_notes<br/>- network_audit_log"]
+            DataStandards["Data Standards<br/>- data_standards<br/>- data_standard_forms"]
+        end
+
+        subgraph "Tenant Databases"
+            TenantA["Org A Database<br/>- dsf_101_view<br/>- data_* tables"]
+            TenantB["Org B Database<br/>- dsf_102_view<br/>- data_* tables"]
+            TenantN["Org N Database<br/>- dsf_103_view<br/>- data_* tables"]
+        end
+    end
+
+    subgraph "Infrastructure"
+        Redis["Redis<br/>(Cache + Pub/Sub)"]
+        BullQueue["Bull Queue<br/>(Background Jobs)"]
+    end
+
+    %% Client to API
+    Browser --> ReactApp
+    ReactApp -->|GraphQL Query/Mutation| ApolloServer
+    ReactApp -->|WebSocket Subscribe| WSServer
+    ReactApp -->|REST (Legacy)| RestAPI
+
+    %% API to Services
+    ApolloServer --> NDFS
+    WSServer --> EventService
+    RestAPI --> NDFS
+
+    %% Service Dependencies
+    NDFS --> PMS
+    NDFS --> PIIS
+    NDFS --> CacheService
+    NDFS --> EventService
+    PMS --> BullQueue
+
+    %% Services to Data
+    NDFS --> NetworkTables
+    NDFS --> DataStandards
+    NDFS --> TenantA
+    NDFS --> TenantB
+    NDFS --> TenantN
+
+    PMS --> NetworkTables
+    PIIS --> NetworkTables
+
+    %% Services to Infrastructure
+    CacheService --> Redis
+    EventService --> Redis
+    BullQueue --> Redis
+
+    %% Styling
+    classDef client fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef api fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef data fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class Browser,ReactApp client
+    class ApolloServer,RestAPI,WSServer api
+    class NDFS,PMS,PIIS,CacheService,EventService service
+    class NetworkTables,DataStandards,TenantA,TenantB,TenantN data
+    class Redis,BullQueue infra

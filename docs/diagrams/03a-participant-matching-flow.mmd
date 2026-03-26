@@ -1,0 +1,75 @@
+%% Sequence Diagram: Participant Matching Flow
+%% Shows how a new participant is matched against existing network participants
+
+sequenceDiagram
+    actor User
+    participant React as React App
+    participant API as GraphQL API
+    participant NDF as NetworkDocumentFolderService
+    participant Matching as ParticipantMatchingService
+    participant Queue as Bull Queue
+    participant DB as Database
+    participant Redis as Redis Cache
+
+    Note over User,Redis: New participant added to network via Data Standard mapping
+
+    User->>React: View network participants
+    React->>API: Query networkParticipants(network_id)
+
+    API->>NDF: getNetworkParticipants()
+    NDF->>Redis: Check cache (network:123:participants)
+
+    alt Cache Hit
+        Redis-->>NDF: Return cached data
+        NDF-->>API: Participants list
+    else Cache Miss
+        NDF->>DB: Query network_participants table
+        DB-->>NDF: Network participants
+
+        loop For each participant
+            NDF->>DB: Query DSF views (parallel)
+            Note over NDF,DB: SELECT * FROM dsf_101_view<br/>SELECT * FROM dsf_102_view<br/>SELECT * FROM dsf_103_view
+            DB-->>NDF: DSF view data
+        end
+
+        NDF->>NDF: Aggregate & enrich data
+        NDF->>NDF: Apply PII filtering
+        NDF->>Redis: Cache result (TTL: 5min)
+        NDF-->>API: Participants list
+    end
+
+    API-->>React: Return participants
+    React-->>User: Display participant list
+
+    Note over User,Redis: Background matching process
+
+    NDF->>Queue: Enqueue matching job<br/>(networkId, participantId)
+    activate Queue
+
+    Queue->>Matching: Process matching job
+    activate Matching
+
+    Matching->>DB: Load participant A
+    Matching->>DB: Load all other participants in network
+
+    loop For each other participant
+        Matching->>Matching: Calculate match score<br/>- SSN hash match: 45pts<br/>- DOB hash match: 35pts<br/>- Name similarity: 30pts
+
+        alt Score >= 70
+            Matching->>DB: Insert into<br/>network_participant_potential_matches
+        end
+    end
+
+    Matching->>Redis: Invalidate cache<br/>(network:123:participants)
+    Matching->>Redis: Publish event<br/>(MATCH_DETECTED_123)
+
+    deactivate Matching
+    Queue-->>NDF: Job complete
+    deactivate Queue
+
+    Note over React,Redis: Real-time update via subscription
+
+    Redis->>API: Pub/Sub: MATCH_DETECTED_123
+    API->>React: WebSocket: matchDetected event
+    React->>React: Update UI (show notification)
+    React-->>User: "New potential match found!"
