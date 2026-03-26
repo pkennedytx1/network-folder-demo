@@ -40,25 +40,44 @@
             font-size: 14px;
         }
 
-        /* Top Navigation */
-        .top-nav {
+        /* Demo Control Navigation (Always Visible) */
+        .demo-control-nav {
             background: white;
             border-bottom: 1px solid var(--border);
             padding: 12px 0;
         }
 
-        .top-nav-content {
+        .demo-control-nav-content {
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 24px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
+            min-height: 48px;
+        }
+
+        /* Breadcrumb Navigation (Main Pages) */
+        .breadcrumb-nav {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .breadcrumb-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 48px;
         }
 
         .breadcrumb {
             color: var(--gray-600);
             font-size: 14px;
+            text-align: left;
         }
 
         .breadcrumb a {
@@ -68,13 +87,6 @@
 
         .breadcrumb a:hover {
             color: var(--gray-900);
-        }
-
-        .top-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-shrink: 0;
         }
 
         .btn {
@@ -873,6 +885,54 @@
         }
 
         .detail-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Secondary Navigation (App-level) */
+        .secondary-nav {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .secondary-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 48px;
+        }
+
+        .secondary-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        .secondary-breadcrumb a {
+            color: var(--gray-600);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .secondary-breadcrumb a:hover {
+            color: var(--gray-900);
+        }
+
+        .secondary-breadcrumb-id {
+            color: var(--gray-900);
+            font-weight: 500;
+        }
+
+        .secondary-actions {
             display: flex;
             gap: 8px;
             flex-shrink: 0;
@@ -1677,23 +1737,23 @@
     </style>
 </head>
 <body>
+    <!-- Demo Control Navigation (Always Visible - Outside all pages) -->
+    <nav class="demo-control-nav">
+        <div class="demo-control-nav-content">
+            <button class="btn btn-primary" onclick="toggleViewMode()">
+                <i class="fas fa-crown" id="view-icon"></i>
+                <span id="view-text">Lead View</span>
+            </button>
+        </div>
+    </nav>
+
     <!-- Network Overview Page -->
     <div id="network-overview-page">
-        <!-- Top Navigation -->
-        <nav class="top-nav">
-            <div class="top-nav-content">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb-nav">
+            <div class="breadcrumb-nav-content">
                 <div class="breadcrumb">
                     <a href="#">My Networks</a> &gt; <strong>Chicago West Side CVI Network</strong>
-                </div>
-                <div class="top-actions">
-                    <button class="btn" id="member-type-btn" style="display: none;" onclick="toggleMemberType()">
-                        <i class="fas fa-building"></i>
-                        <span id="member-type-text">Internal Member</span>
-                    </button>
-                    <button class="btn btn-primary" onclick="toggleViewMode()">
-                        <i class="fas fa-crown" id="view-icon"></i>
-                        <span id="view-text">Lead View</span>
-                    </button>
                 </div>
             </div>
         </nav>
@@ -1908,23 +1968,13 @@
         </div>
     </div>
 
-    <!-- Top Navigation -->
-    <nav class="top-nav" id="data-standard-nav">
-        <div class="top-nav-content">
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb-nav" id="data-standard-nav">
+        <div class="breadcrumb-nav-content">
             <div class="breadcrumb">
                 <a href="#" onclick="showNetworkOverview(); return false;">My Networks</a> &gt;
                 <a href="#" onclick="showNetworkOverview(); return false;">Chicago West Side CVI Network</a> &gt;
                 <strong>Participant Incident</strong>
-            </div>
-            <div class="top-actions">
-                <button class="btn" id="member-type-btn-2" style="display: none;" onclick="toggleMemberType()">
-                    <i class="fas fa-building"></i>
-                    <span id="member-type-text-2">Internal Member</span>
-                </button>
-                <button class="btn btn-primary" onclick="toggleViewMode()">
-                    <i class="fas fa-crown" id="view-icon-2"></i>
-                    <span id="view-text-2">Lead View</span>
-                </button>
             </div>
         </div>
     </nav>
@@ -2980,13 +3030,17 @@
 
     <!-- Participant Detail Page -->
     <div id="participant-detail-page">
-        <!-- Top Navigation -->
-        <nav class="detail-top-nav">
-            <div class="detail-top-nav-content">
-                <a href="#" class="detail-back-link" onclick="closeParticipantDetail(); return false;">
-                    ← <a href="#" onclick="showDataStandard('participant-incident'); return false;" style="color: var(--gray-600);">Back to Participant Incident</a> &gt; P-1042
-                </a>
-                <div class="detail-actions">
+        <!-- App Navigation -->
+        <nav class="secondary-nav">
+            <div class="secondary-nav-content">
+                <div class="secondary-breadcrumb">
+                    <a href="#" onclick="closeParticipantDetail(); return false;">
+                        <i class="fas fa-arrow-left"></i> Back to Participant Incident
+                    </a>
+                    <span>&gt;</span>
+                    <span class="secondary-breadcrumb-id">P-1042</span>
+                </div>
+                <div class="secondary-actions">
                     <button class="btn" onclick="togglePII()">
                         <span id="detail-pii-icon"><i class="fas fa-lock"></i></span>
                         <span id="detail-pii-text">PII Hidden</span>
@@ -3409,13 +3463,17 @@
 
     <!-- Incident Detail Page -->
     <div id="incident-detail-page">
-        <!-- Top Navigation -->
-        <nav class="detail-top-nav">
-            <div class="detail-top-nav-content">
-                <a href="#" class="detail-back-link" onclick="closeIncidentDetail(); return false;">
-                    ← <a href="#" onclick="showDataStandard('participant-incident'); showTab('incidents'); return false;" style="color: var(--gray-600);">Back to Participant Incident</a> &gt; INC-0091
-                </a>
-                <div class="detail-actions">
+        <!-- App Navigation -->
+        <nav class="secondary-nav">
+            <div class="secondary-nav-content">
+                <div class="secondary-breadcrumb">
+                    <a href="#" onclick="closeIncidentDetail(); return false;">
+                        <i class="fas fa-arrow-left"></i> Back to Participant Incident
+                    </a>
+                    <span>&gt;</span>
+                    <span class="secondary-breadcrumb-id">INC-0091</span>
+                </div>
+                <div class="secondary-actions">
                     <button class="btn">
                         <i class="fas fa-file-download"></i> Export Report
                     </button>
@@ -3657,7 +3715,7 @@
             if (type === 'participant-incident') {
                 document.getElementById('network-overview-page').style.display = 'none';
                 document.getElementById('main-container').style.display = 'block';
-                document.getElementById('data-standard-nav').style.display = 'flex';
+                document.getElementById('data-standard-nav').style.display = 'block';
                 document.getElementById('participant-detail-page').style.display = 'none';
                 document.getElementById('incident-detail-page').style.display = 'none';
                 // Show participants tab by default
@@ -3758,37 +3816,17 @@
         function toggleViewMode() {
             isLeadView = !isLeadView;
 
-            // Update buttons on network overview page
+            // Update the shared demo control button
             const viewIcon = document.getElementById('view-icon');
             const viewText = document.getElementById('view-text');
-            const memberTypeBtn = document.getElementById('member-type-btn');
 
             if (viewIcon && viewText) {
                 if (isLeadView) {
                     viewIcon.className = 'fas fa-crown';
                     viewText.textContent = 'Lead View';
-                    memberTypeBtn.style.display = 'none';
                 } else {
                     viewIcon.className = 'fas fa-user';
                     viewText.textContent = 'Member View';
-                    memberTypeBtn.style.display = 'inline-flex';
-                }
-            }
-
-            // Update buttons on data standard page
-            const viewIcon2 = document.getElementById('view-icon-2');
-            const viewText2 = document.getElementById('view-text-2');
-            const memberTypeBtn2 = document.getElementById('member-type-btn-2');
-
-            if (viewIcon2 && viewText2) {
-                if (isLeadView) {
-                    viewIcon2.className = 'fas fa-crown';
-                    viewText2.textContent = 'Lead View';
-                    memberTypeBtn2.style.display = 'none';
-                } else {
-                    viewIcon2.className = 'fas fa-user';
-                    viewText2.textContent = 'Member View';
-                    memberTypeBtn2.style.display = 'inline-flex';
                 }
             }
 
@@ -3953,18 +3991,18 @@
 
         // Participant detail page
         function showParticipantDetail() {
-            // Hide main container and show detail page
+            // Hide main container and breadcrumb nav, show detail page
             document.getElementById('main-container').style.display = 'none';
-            document.querySelector('.top-nav').style.display = 'none';
+            document.getElementById('data-standard-nav').style.display = 'none';
             document.getElementById('participant-detail-page').style.display = 'block';
             // Scroll to top
             window.scrollTo(0, 0);
         }
 
         function closeParticipantDetail() {
-            // Show main container and hide detail page
+            // Show main container and breadcrumb nav, hide detail page
             document.getElementById('main-container').style.display = 'block';
-            document.querySelector('.top-nav').style.display = 'flex';
+            document.getElementById('data-standard-nav').style.display = 'block';
             document.getElementById('participant-detail-page').style.display = 'none';
             // Scroll to top
             window.scrollTo(0, 0);
@@ -3972,18 +4010,18 @@
 
         // Incident detail page
         function showIncidentDetail() {
-            // Hide main container and show incident detail page
+            // Hide main container and breadcrumb nav, show incident detail page
             document.getElementById('main-container').style.display = 'none';
-            document.querySelector('.top-nav').style.display = 'none';
+            document.getElementById('data-standard-nav').style.display = 'none';
             document.getElementById('incident-detail-page').style.display = 'block';
             // Scroll to top
             window.scrollTo(0, 0);
         }
 
         function closeIncidentDetail() {
-            // Show main container and hide incident detail page
+            // Show main container and breadcrumb nav, hide incident detail page
             document.getElementById('main-container').style.display = 'block';
-            document.querySelector('.top-nav').style.display = 'flex';
+            document.getElementById('data-standard-nav').style.display = 'block';
             document.getElementById('incident-detail-page').style.display = 'none';
             // Scroll to top
             window.scrollTo(0, 0);
