@@ -614,10 +614,506 @@ WS_PATH=/api/graph
 
 ---
 
+## Architectural Decision: Internal vs External Members
+
+### New Requirements
+
+Networks will now support **two types of member organizations**:
+
+1. **Internal Members** (Apricot Users)
+   - Full Apricot tenants with their own databases
+   - Data lives in DSF views (data standard form views)
+   - Real-time data access
+   - Full Apricot functionality + network folder
+
+2. **External Members** (Non-Apricot Users)
+   - Upload data directly to Snowflake
+   - Limited Apricot access (network folder only)
+   - Data in standardized Snowflake schema
+   - May convert to Apricot later
+
+### Data Standard Validation Requirements
+
+**New Data Standard Type: "Participant Incident"**
+
+When creating a Participant Incident data standard, validation must enforce:
+
+**Required Tier 1s**:
+- Participant (Tier 1)
+- Incident (Tier 1, linked to Participant)
+
+**Required Participant Fields**:
+- Name (field type: text)
+- Date of Birth (field type: date)
+- Social Security Number (field type: text/encrypted)
+- Address (field type: address/text)
+- Additional fields TBD
+
+**Optional**:
+- Users can add additional Tier 2 forms under these Tier 1s
+- Users can rename fields (already supported)
+- Tier 2s not yet supported in network folder (future consideration)
+
+**Implementation Location**: Data Standards React app enhancement
+
+---
+
+## Architecture Options Analysis
+
+### Option 1: Direct Source Queries (Current Design + Snowflake)
+
+```
+Network Document Folder API
+  ↓
+┌──────────────────┬────────────────────────┐
+│ Internal Orgs    │ External Orgs          │
+│ Query DSF Views  │ Query Snowflake Tables │
+│ (Real-time)      │ (Upload cadence)       │
+└──────────────────┴────────────────────────┘
+  ↓
+Aggregate & Cache in Redis
+  ↓
+Match & Store in network_participants table
+```
+
+**Pros**:
+- Real-time data for internal members
+- Simple, direct queries
+- No dependency on Impact Hub pipeline
+- Clear separation of concerns
+
+**Cons**:
+- Need to query two different systems (Postgres + Snowflake)
+- Need two different query patterns
+- Matching algorithm runs in our service (more complexity)
+- Must maintain Snowflake connection/credentials
+
+---
+
+### Option 2: Impact Hub as Source of Truth
+
+```
+Network Document Folder API
+  ↓
+Query Impact Hub (Snowflake)
+  ↓
+(Contains both Apricot DSF view data + External uploads)
+  ↓
+Use Snowflake similarity matching
+  ↓
+Store matches in network_participants table
+```
+
+**Pros**:
+- Single source to query (Snowflake)
+- Leverage Snowflake's built-in similarity matching
+- Both internal and external data already aggregated
+- Consistent query patterns
+
+**Cons**:
+- ⚠️ **Staleness**: Impact Hub sync has delays (not real-time)
+- Internal Apricot users expect real-time data
+- Dependency on Impact Hub pipeline health
+- Can't provide fresher data than Impact Hub sync schedule
+
+---
+
+### Option 3: Hybrid Approach (Recommended)
+
+```
+Network Document Folder API
+  ↓
+┌──────────────────────────────────────────────────────┐
+│ Internal Orgs: Query DSF Views (Real-time)           │
+│ External Orgs: Query Snowflake (External schema)     │
+└──────────────────────────────────────────────────────┘
+  ↓
+Aggregate results in application layer
+  ↓
+Cache in Redis (5-minute TTL)
+  ↓
+Background Job: Sync to Snowflake matching workspace
+  ↓
+Run Snowflake similarity matching (background)
+  ↓
+Store suggested matches in network_participant_potential_matches
+  ↓
+Human review & confirmation in UI
+```
+
+**How It Works**:
+
+1. **Query Layer**:
+   - Check org type (internal vs external)
+   - Internal: `SELECT * FROM dsf_123_view` (tenant DB)
+   - External: `SELECT * FROM external_org_456_participants` (Snowflake)
+
+2. **Caching Layer**:
+   - Cache combined results in Redis
+   - TTL: 5 minutes for internal (real-time feel)
+   - TTL: 30 minutes for external (upload cadence)
+
+3. **Matching Strategy**:
+   - Use **Snowflake's similarity matching** for heavy lifting
+   - Sync anonymized/hashed PII to Snowflake matching workspace
+   - Run matching as background job
+   - Present results to users for confirmation
+
+4. **Data Freshness**:
+   - Internal orgs: Real-time (query DSF views directly)
+   - External orgs: As fresh as their upload cadence
+   - Best of both worlds
+
+**Pros**:
+- ✅ Real-time data for internal members
+- ✅ Leverage Snowflake matching (no custom algorithm needed)
+- ✅ Single UI/UX for both member types
+- ✅ Future-proof (easy to add more sources)
+- ✅ No dependency on Impact Hub pipeline
+
+**Cons**:
+- More complex query routing logic
+- Need to manage both Postgres and Snowflake connections
+- Matching workspace in Snowflake requires data sync
+
+---
+
+## Recommended Architecture: Hybrid with Snowflake Matching
+
+### Data Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     User Action: View Participants              │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+                    ┌───────────────────────┐
+                    │   Check Cache (Redis) │
+                    └───────┬───────────────┘
+                            │
+                    ┌───────┴────────┐
+                    │ Cache Hit?     │
+                    └───┬────────┬───┘
+                   Yes  │        │ No
+                        ▼        ▼
+                  ┌─────────┐  ┌────────────────────────────────┐
+                  │ Return  │  │ Query Network Member Orgs:     │
+                  │ Cached  │  │                                │
+                  │ Data    │  │ For each org in network:       │
+                  └─────────┘  │  - Check org.member_type       │
+                               │                                │
+                               │  IF 'internal':                │
+                               │   → Query DSF view (Postgres)  │
+                               │     SELECT * FROM dsf_N_view   │
+                               │                                │
+                               │  IF 'external':                │
+                               │   → Query Snowflake table      │
+                               │     SELECT * FROM org_N_data   │
+                               │                                │
+                               └────────────┬───────────────────┘
+                                            ▼
+                               ┌────────────────────────────────┐
+                               │ Aggregate Results:             │
+                               │  - Combine all org data        │
+                               │  - Apply PII filtering         │
+                               │  - Join with confirmed matches │
+                               └────────────┬───────────────────┘
+                                            ▼
+                               ┌────────────────────────────────┐
+                               │ Cache Results (Redis)          │
+                               │  Key: network:123:participants │
+                               │  TTL: 5 minutes                │
+                               └────────────┬───────────────────┘
+                                            ▼
+                               ┌────────────────────────────────┐
+                               │ Return to User                 │
+                               └────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│              Background: Matching Algorithm Job                 │
+│                   (Runs every 15 minutes)                       │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+                   ┌────────────────────────────┐
+                   │ Extract Participant Data:  │
+                   │  - Get all participants    │
+                   │    in network              │
+                   │  - Anonymize PII (hash)    │
+                   └────────────┬───────────────┘
+                                ▼
+                   ┌────────────────────────────┐
+                   │ Sync to Snowflake:         │
+                   │  Table: matching_workspace │
+                   │  Columns:                  │
+                   │   - participant_id         │
+                   │   - org_id                 │
+                   │   - name_hash              │
+                   │   - dob_hash               │
+                   │   - ssn_hash               │
+                   │   - address_normalized     │
+                   └────────────┬───────────────┘
+                                ▼
+                   ┌────────────────────────────┐
+                   │ Run Snowflake Similarity:  │
+                   │                            │
+                   │ SELECT                     │
+                   │   a.participant_id as p1,  │
+                   │   b.participant_id as p2,  │
+                   │   SIMILARITY(              │
+                   │     a.name_hash,           │
+                   │     b.name_hash            │
+                   │   ) +                      │
+                   │   SIMILARITY(              │
+                   │     a.dob_hash,            │
+                   │     b.dob_hash             │
+                   │   ) as score               │
+                   │ FROM matching_workspace a  │
+                   │ JOIN matching_workspace b  │
+                   │ WHERE score > 70           │
+                   └────────────┬───────────────┘
+                                ▼
+                   ┌────────────────────────────┐
+                   │ Store Potential Matches:   │
+                   │  INSERT INTO               │
+                   │  network_participant_      │
+                   │    potential_matches       │
+                   │                            │
+                   │  Status: pending_review    │
+                   └────────────┬───────────────┘
+                                ▼
+                   ┌────────────────────────────┐
+                   │ Invalidate Cache           │
+                   │ Publish WebSocket Event    │
+                   └────────────────────────────┘
+```
+
+### Database Schema Updates
+
+**New table: `network_member_orgs`**
+
+```sql
+CREATE TABLE network_member_orgs (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  network_id INT NOT NULL,
+  org_id INT, -- NULL for external members
+  member_type ENUM('internal', 'external') NOT NULL,
+
+  -- For external members (Snowflake)
+  external_org_name VARCHAR(255),
+  snowflake_schema VARCHAR(255),
+  snowflake_table VARCHAR(255),
+
+  -- For internal members (Apricot)
+  data_standard_form_id INT, -- DSF to query
+
+  -- Common fields
+  pii_sharing_enabled BOOLEAN DEFAULT false,
+  active BOOLEAN DEFAULT true,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (network_id) REFERENCES networks(id),
+  FOREIGN KEY (org_id) REFERENCES orgs(id),
+  FOREIGN KEY (data_standard_form_id) REFERENCES data_standard_forms(id)
+);
+```
+
+**Update: `data_standards` table**
+
+```sql
+ALTER TABLE data_standards ADD COLUMN standard_type ENUM(
+  'general',
+  'participant_incident',
+  'other'
+) DEFAULT 'general';
+```
+
+**New table: `data_standard_validation_rules`**
+
+```sql
+CREATE TABLE data_standard_validation_rules (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  data_standard_id INT NOT NULL,
+  rule_type ENUM(
+    'required_tier1',
+    'required_field',
+    'required_link'
+  ) NOT NULL,
+  rule_config JSON NOT NULL,
+  -- Example: {"tier1_type": "participant", "required_fields": ["name", "dob", "ssn", "address"]}
+
+  FOREIGN KEY (data_standard_id) REFERENCES data_standards(id)
+);
+```
+
+### API Service Changes
+
+**New Service: `DataSourceRouter`**
+
+```typescript
+// src/application/services/dataSourceRouter.ts
+
+class DataSourceRouter {
+  async queryParticipants(networkId: number): Promise<Participant[]> {
+    const memberOrgs = await this.getNetworkMembers(networkId);
+
+    const results = await Promise.all(
+      memberOrgs.map(async (org) => {
+        if (org.member_type === 'internal') {
+          // Query DSF view from tenant DB
+          return this.queryDSFView(org);
+        } else {
+          // Query Snowflake table
+          return this.querySnowflakeTable(org);
+        }
+      })
+    );
+
+    return this.aggregateResults(results);
+  }
+
+  private async queryDSFView(org: NetworkMemberOrg) {
+    const tenantDb = await this.getTenantConnection(org.org_id);
+    return tenantDb.query(`
+      SELECT * FROM dsf_${org.data_standard_form_id}_view
+      WHERE active = 1
+    `);
+  }
+
+  private async querySnowflakeTable(org: NetworkMemberOrg) {
+    const snowflake = await this.getSnowflakeConnection();
+    return snowflake.query(`
+      SELECT * FROM ${org.snowflake_schema}.${org.snowflake_table}
+    `);
+  }
+}
+```
+
+**New Service: `SnowflakeMatchingService`**
+
+```typescript
+// src/application/services/snowflakeMatchingService.ts
+
+class SnowflakeMatchingService {
+  async syncToMatchingWorkspace(networkId: number) {
+    const participants = await this.getNetworkParticipants(networkId);
+
+    // Anonymize PII
+    const anonymized = participants.map(p => ({
+      participant_id: p.id,
+      org_id: p.org_id,
+      name_hash: this.hashPII(p.name),
+      dob_hash: this.hashPII(p.dob),
+      ssn_hash: this.hashPII(p.ssn),
+      address_normalized: this.normalizeAddress(p.address)
+    }));
+
+    // Insert into Snowflake workspace
+    await this.snowflake.insert('matching_workspace', anonymized);
+  }
+
+  async runSimilarityMatching(networkId: number) {
+    const matches = await this.snowflake.query(`
+      WITH similarity_scores AS (
+        SELECT
+          a.participant_id as participant_a,
+          b.participant_id as participant_b,
+          a.org_id as org_a,
+          b.org_id as org_b,
+          (
+            EDITDISTANCE(a.name_hash, b.name_hash) * 30 +
+            CASE WHEN a.dob_hash = b.dob_hash THEN 35 ELSE 0 END +
+            CASE WHEN a.ssn_hash = b.ssn_hash THEN 45 ELSE 0 END
+          ) as confidence_score
+        FROM matching_workspace a
+        JOIN matching_workspace b
+          ON a.participant_id < b.participant_id
+          AND a.org_id != b.org_id
+        WHERE a.network_id = ?
+          AND b.network_id = ?
+      )
+      SELECT * FROM similarity_scores
+      WHERE confidence_score >= 70
+      ORDER BY confidence_score DESC
+    `, [networkId, networkId]);
+
+    // Store as potential matches
+    await this.storePotentialMatches(matches);
+  }
+}
+```
+
+### Snowflake Similarity Functions
+
+Snowflake provides these built-in functions we can leverage:
+
+1. **EDITDISTANCE()**: Levenshtein distance for string comparison
+2. **SOUNDEX()**: Phonetic matching for names
+3. **JAROWINKLER_SIMILARITY()**: Advanced string similarity (0-100 scale)
+
+Example query:
+```sql
+SELECT
+  JAROWINKLER_SIMILARITY('Tyrell Jenkins', 'Tyrel Jenkins') as name_score,
+  -- Returns ~95 (high similarity despite spelling difference)
+```
+
+---
+
+## Implementation Priority
+
+### Phase 1: Internal Members (Existing Design)
+- [x] Query DSF views
+- [x] Cache aggregated results
+- [x] Basic matching algorithm
+- [x] UI/UX for network folder
+
+### Phase 2: External Member Support (NEW)
+- [ ] Add `member_type` to network member orgs
+- [ ] Implement Snowflake connection in API
+- [ ] Build `DataSourceRouter` service
+- [ ] Update UI to show member type indicators
+- [ ] Test with mixed network (internal + external)
+
+### Phase 3: Snowflake Matching (NEW)
+- [ ] Create matching workspace in Snowflake
+- [ ] Build sync job (participants → Snowflake)
+- [ ] Implement Snowflake similarity queries
+- [ ] Replace custom matching algorithm
+- [ ] Performance testing & optimization
+
+### Phase 4: Data Standard Validation (NEW)
+- [ ] Add `standard_type` field to data standards
+- [ ] Build validation rules engine
+- [ ] Update Data Standards React app UI
+- [ ] Add "Participant Incident" type option
+- [ ] Enforce required fields validation
+
+---
+
+## Decision Matrix
+
+| Factor | Direct Queries | Impact Hub Only | Hybrid (Recommended) |
+|--------|---------------|-----------------|----------------------|
+| **Real-time for Internal** | ✅ Yes | ❌ No (delayed) | ✅ Yes |
+| **Snowflake Matching** | ⚠️ Manual sync needed | ✅ Native | ✅ Background sync |
+| **Implementation Complexity** | 🟡 Medium | 🟢 Low | 🟠 High |
+| **Impact Hub Dependency** | 🟢 None | 🔴 Critical | 🟢 None |
+| **External Member Support** | ⚠️ Need Snowflake anyway | ✅ Already there | ✅ Native |
+| **Query Performance** | 🟢 Fast (indexed) | 🟢 Fast (Snowflake) | 🟢 Fast (both) |
+| **Scalability** | 🟢 Good | ✅ Excellent | 🟢 Good |
+
+**Recommendation**: **Hybrid Approach**
+- Best balance of real-time data + leveraging Snowflake matching
+- No dependency on Impact Hub pipeline
+- Future-proof for additional data sources
+
+---
+
 ## Future Enhancements
 
-1. **ML-Based Matching**: Train model on confirmed matches
+1. **ML-Based Matching**: Train model on confirmed matches (supplement Snowflake)
 2. **Read Replicas**: For DSF view queries at scale
 3. **Event Sourcing**: Full audit trail with replay capability
 4. **Advanced Analytics**: Network-wide trends and insights
 5. **Mobile App**: Native iOS/Android with push notifications
+6. **Tier 2 Support**: Include Tier 2 forms in network folder views

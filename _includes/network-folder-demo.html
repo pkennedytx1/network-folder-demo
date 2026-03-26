@@ -52,9 +52,14 @@
             margin: 0 auto;
             padding: 0 24px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             min-height: 48px;
+            h1 {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--gray-500);
+            }
         }
 
         /* Breadcrumb Navigation (Main Pages) */
@@ -1740,6 +1745,7 @@
     <!-- Demo Control Navigation (Always Visible - Outside all pages) -->
     <nav class="demo-control-nav">
         <div class="demo-control-nav-content">
+            <h1>DEMO ONLY - NOT FINAL UI</h1>
             <button class="btn btn-primary" onclick="toggleViewMode()">
                 <i class="fas fa-crown" id="view-icon"></i>
                 <span id="view-text">Lead View</span>
