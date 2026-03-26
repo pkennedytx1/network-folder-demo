@@ -72,7 +72,7 @@ graph TB
     Browser --> ReactApp
     ReactApp -->|GraphQL Query/Mutation| ApolloServer
     ReactApp -->|WebSocket Subscribe| WSServer
-    ReactApp -->|REST (Legacy)| RestAPI
+    ReactApp -->|REST Legacy| RestAPI
 
     %% API to Services
     ApolloServer --> NDFS
