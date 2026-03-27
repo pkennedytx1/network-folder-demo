@@ -117,7 +117,7 @@ Since DSF views are:
   - Participant matches (which DSF records = same person)
   - Network incidents (not in tenant DBs)
   - Org responses to incidents
-  - Notes, referrals
+  - Notes
 
 **Data Flow:**
 ```
@@ -260,18 +260,6 @@ network_notes:
   - related_participant_id (nullable)
   - related_incident_id (nullable)
   - created_at
-
--- Referrals between orgs
-network_referrals:
-  - id (PK)
-  - network_id (FK)
-  - participant_id (FK)
-  - from_org_id
-  - to_org_id
-  - reason
-  - status (pending, accepted, in_progress, completed, declined)
-  - created_at
-  - updated_at
 ```
 
 ### Data Standards Extension
@@ -281,10 +269,10 @@ network_referrals:
 
 ```sql
 data_standards:
-  + standard_type ENUM('participant', 'incident', 'other')
+  + standard_type ENUM('participant incident', 'other') -- can extend in the future, i.e. Veteran, HMIS, Standardization, Bonterra Created
 
 -- This determines which features are available:
-- participant type → matching, referrals, cross-org coordination
+- participant type → matching, cross-org coordination
 - incident type → multi-org response tracking, flagging
 ```
 
@@ -356,25 +344,21 @@ export interface ValidationRule {
 export const PARTICIPANT_INCIDENT_RULES: ValidationRule[] = [
   {
     ruleType: 'required_tier1',
-    config: { tier1Type: 'participant' },
-    errorMessage: 'Must include a Participant (Tier 1) form'
-  },
-  {
-    ruleType: 'required_tier1',
-    config: { tier1Type: 'incident' },
-    errorMessage: 'Must include an Incident (Tier 1) form linked to Participant'
+    config: { tier1Type: 'participant incident' },
+    errorMessage: 'Must include a Participant (Tier 1) form & include an Incident (Tier 1) form linked to Participant'
   },
   {
     ruleType: 'required_field',
     config: {
-      tier1Type: 'participant',
-      fieldName: 'name',
-      fieldTypes: ['text', 'name']
+      tier1Type: 'participant incident',
+      fieldNameRequirment: 'name',
+      fieldTypes: 5
     },
-    errorMessage: 'Participant must have a Name field'
+    errorMessage: 'Participant must have a Name field with a label containing name'
   },
   // ... DOB, SSN, Address rules
 ];
+// NOTE: 'name' is required to be in the labels name, other rules will apply to other fields
 
 export function validateDataStandard(
   standardType: string,
@@ -545,7 +529,6 @@ export function initNetworkParticipant(sequelize: Sequelize) {
 ### 1.4: Create Sequelize Models - Collaboration (Simple - 2 hours)
 
 **Files to Create**:
-- `Apricot_Files/apricot-api/src/repository/models/global/network_referrals.ts`
 - `Apricot_Files/apricot-api/src/repository/models/global/network_notes.ts`
 - `Apricot_Files/apricot-api/src/repository/models/global/network_audit_log.ts`
 - `Apricot_Files/apricot-api/src/repository/models/global/network_pii_settings.ts`
@@ -1545,7 +1528,6 @@ REDIS_PUBSUB_DB=5
    network_participant_sources.ts
    network_incidents.ts
    network_incident_org_responses.ts
-   network_referrals.ts
    network_notes.ts
    network_audit_log.ts
    network_pii_settings.ts
@@ -1555,7 +1537,6 @@ REDIS_PUBSUB_DB=5
    ```
    NetworkParticipantService.ts
    NetworkIncidentService.ts
-   NetworkReferralService.ts
    ```
 
 3. **SQL Queries** (`src/repository/query/`)
@@ -1631,10 +1612,6 @@ src/NetworkDocumentFolder/
 │   │   ├── IncidentList.tsx
 │   │   ├── IncidentDetail.tsx
 │   │   └── OrgResponseTracker.tsx
-│   │
-│   ├── ReferralsView/
-│   │   ├── ReferralList.tsx
-│   │   └── ReferralDetail.tsx
 │   │
 │   └── DashboardView/
 │       └── NetworkOverview.tsx

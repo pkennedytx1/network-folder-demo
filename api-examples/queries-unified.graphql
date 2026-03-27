@@ -1,0 +1,718 @@
+# ============================================================================
+# Network Document Folder - GraphQL Queries (UNIFIED SCHEMA)
+# ============================================================================
+# Complete reference for all query operations using unified network_shared_records table
+# Key Changes:
+# - Single `networkSharedRecords` query (replaces networkParticipants, networkIncidents)
+# - `record_type` filter for participant vs incident
+# - `metadata` JSON field for type-specific data
+# - Field ID-based PII filtering (not field names)
+# - Referrals removed (separate microservice)
+# ============================================================================
+
+# ============================================================================
+# CORE QUERIES: UNIFIED SHARED RECORDS
+# ============================================================================
+
+# Get all shared records (participants, incidents, or both)
+query GetNetworkSharedRecords(
+  $networkId: ID!
+  $recordType: RecordType      # 'participant' or 'incident' (optional filter)
+  $status: RecordStatus        # 'pending', 'confirmed', 'rejected'
+  $limit: Int
+  $offset: Int
+) {
+  networkSharedRecords(
+    network_id: $networkId
+    record_type: $recordType
+    status: $status
+    limit: $limit
+    offset: $offset
+  ) {
+    total
+    hasMore
+    records {
+      id
+      network_id
+      data_standard_id
+      record_type               # 'participant' or 'incident'
+      status                    # 'pending', 'confirmed', 'rejected'
+      match_confidence_score    # Only for participants
+
+      # Type-specific data stored in JSON
+      # Participant example: {"matching_algorithm_version": "1.0", "confirmed_at": "..."}
+      # Incident example: {"severity": "high", "incident_type": "shooting", "location": "Portland, OR", ...}
+      metadata
+
+      # Sources (from tenant DBs)
+      sources {
+        id
+        org_id
+        org_name
+        tenant_document_id      # tier1_record_id in tenant DB
+        dsf_id
+        source_type             # 'apricot' or 'snowflake'
+
+        # DSF view data (PII filtered based on field IDs)
+        # Example: {"field_4721": "Marcus Thompson", "field_4722": "1998-03-15", "field_4723": "4521"}
+        dsf_view_data
+
+        contributed_at
+        confirmed_by_org_user_id
+      }
+
+      # Org responses (matches, incident responses, imports)
+      responses {
+        id
+        org_id
+        org_name
+        response_type           # 'match_confirmed', 'incident_responded', 'imported_to_tenant'
+        response_data           # JSON with response details
+        created_at
+        created_by_user_id
+      }
+
+      created_at
+      updated_at
+      created_by_org_id
+    }
+  }
+}
+
+# Variables examples:
+
+# Get all confirmed participants:
+# {
+#   "networkId": "1",
+#   "recordType": "participant",
+#   "status": "confirmed",
+#   "limit": 50,
+#   "offset": 0
+# }
+
+# Get all active incidents:
+# {
+#   "networkId": "1",
+#   "recordType": "incident",
+#   "status": "confirmed",
+#   "limit": 20,
+#   "offset": 0
+# }
+
+# Get all records (participants + incidents):
+# {
+#   "networkId": "1",
+#   "limit": 100,
+#   "offset": 0
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get single shared record with full details
+query GetNetworkSharedRecord($networkId: ID!, $recordId: ID!) {
+  networkSharedRecord(network_id: $networkId, record_id: $recordId) {
+    id
+    network_id
+    data_standard_id
+    record_type
+    status
+    match_confidence_score
+    metadata
+
+    # Sources from multiple orgs
+    sources {
+      id
+      org_id
+      org_name
+      tenant_document_id
+      dsf_id
+      source_type
+      dsf_view_data         # PII filtered by field IDs
+      contributed_at
+      confirmed_by_org_user_id
+
+      # Source-specific metadata
+      metadata              # Contains hashes, match scores, etc.
+    }
+
+    # All responses to this record
+    responses {
+      id
+      org_id
+      org_name
+      response_type
+      response_data
+      created_at
+      created_by_user_id
+      created_by_user_name
+    }
+
+    # Related notes
+    notes {
+      id
+      author_org_id
+      author_org_name
+      author_user_id
+      author_user_name
+      content
+      note_type
+      created_at
+    }
+
+    created_at
+    updated_at
+    created_by_org_id
+    created_by_org_name
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "recordId": "123"
+# }
+
+# ============================================================================
+# PARTICIPANT-SPECIFIC QUERIES
+# ============================================================================
+
+# Get potential participant matches needing review
+query GetPotentialMatches($networkId: ID!, $status: String) {
+  networkPotentialMatches(network_id: $networkId, status: $status) {
+    id
+    network_id
+    match_score
+    status
+    match_factors           # JSON: {"ssn": 45, "dob": 35, "name": 20}
+    created_at
+    reviewed_at
+    reviewed_by_user_name
+    review_notes
+
+    # The two records that might be the same person
+    shared_record_a {
+      id
+      sources {
+        org_name
+        dsf_view_data       # PII filtered
+      }
+    }
+
+    shared_record_b {
+      id
+      sources {
+        org_name
+        dsf_view_data       # PII filtered
+      }
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "status": "pending_review"
+# }
+
+# ============================================================================
+# NOTES QUERIES
+# ============================================================================
+
+# Get network notes with optional filtering
+query GetNetworkNotes(
+  $networkId: ID!
+  $sharedRecordId: ID     # Optional: filter by specific record
+  $noteType: String
+  $limit: Int
+) {
+  networkNotes(
+    network_id: $networkId
+    network_shared_record_id: $sharedRecordId
+    note_type: $noteType
+    limit: $limit
+  ) {
+    total
+    notes {
+      id
+      network_id
+      network_shared_record_id
+
+      author_org_id
+      author_org_name
+      author_user_id
+      author_user_name
+
+      content
+      note_type             # 'general', 'coordination', 'alert', 'update'
+
+      created_at
+      updated_at
+      edited
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "noteType": "alert",
+#   "limit": 100
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get notes for specific shared record (participant or incident)
+query GetRecordNotes($networkId: ID!, $recordId: ID!) {
+  networkNotes(
+    network_id: $networkId
+    network_shared_record_id: $recordId
+  ) {
+    notes {
+      id
+      author_org_name
+      author_user_name
+      content
+      note_type
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "recordId": "456"
+# }
+
+# ============================================================================
+# NETWORK MEMBER ORGS & PII SETTINGS
+# ============================================================================
+
+# Get network member orgs with PII settings
+query GetNetworkMemberOrgs($networkId: ID!) {
+  networkMemberOrgs(network_id: $networkId) {
+    orgs {
+      org_id
+      org_name
+      member_type           # 'internal' (Apricot) or 'external' (Snowflake)
+
+      # Internal config
+      data_standard_form_id
+
+      # External config
+      snowflake_view
+      snowflake_schema
+      snowflake_connection_id
+
+      # PII settings (FIELD IDs, not names)
+      pii_sharing_enabled
+      pii_fields_shared     # Array of field IDs: [4721, 4722, 4723]
+      pii_consent_confirmed_at
+      pii_consent_confirmed_by_user_name
+
+      active
+      joined_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get my org's settings in this network
+query GetMyOrgNetworkSettings($networkId: ID!) {
+  myOrgNetworkSettings(network_id: $networkId) {
+    org_id
+    org_name
+    member_type
+
+    # What I'm sharing
+    pii_sharing_enabled
+    pii_fields_shared     # Field IDs I'm sharing: [4721, 4722, 4723]
+
+    # What I can see from others
+    can_view_pii_from_orgs {
+      org_id
+      org_name
+      field_ids_available # Field IDs this org is sharing
+    }
+
+    # Permissions
+    role                  # network_admin, network_member
+    can_confirm_matches
+    can_share_records
+    can_import_records
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# NETWORK METADATA & STATISTICS
+# ============================================================================
+
+# Get network overview with statistics
+query GetNetworkOverview($networkId: ID!) {
+  network(id: $networkId) {
+    id
+    name
+    description
+    lead_org_id
+    lead_org_name
+
+    # Member orgs
+    member_orgs {
+      org_id
+      org_name
+      member_type
+      joined_at
+      pii_sharing_enabled
+    }
+
+    # Statistics
+    statistics {
+      total_shared_records
+      participant_records_count
+      incident_records_count
+      confirmed_matches
+      potential_matches
+      total_notes
+      active_orgs
+    }
+
+    created_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# AUDIT LOG QUERIES
+# ============================================================================
+
+# Get audit log for network (admin only)
+query GetNetworkAuditLog(
+  $networkId: ID!
+  $action: String         # 'view_pii', 'confirm_match', 'share_record', 'import_record'
+  $resourceType: String
+  $userId: ID
+  $startDate: String
+  $endDate: String
+  $limit: Int
+) {
+  networkAuditLog(
+    network_id: $networkId
+    action: $action
+    resource_type: $resourceType
+    user_id: $userId
+    start_date: $startDate
+    end_date: $endDate
+    limit: $limit
+  ) {
+    total
+    entries {
+      id
+      user_id
+      user_name
+      org_id
+      org_name
+
+      action
+      resource_type
+      resource_id
+
+      # Details include field IDs for PII access
+      # Example: {"field_ids_accessed": [4721, 4722], "source_type": "apricot"}
+      details
+
+      ip_address
+      user_agent
+
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "action": "view_pii",
+#   "startDate": "2025-03-01",
+#   "endDate": "2025-03-27",
+#   "limit": 100
+# }
+
+# ============================================================================
+# COMPLEX QUERIES (Real-World Use Cases)
+# ============================================================================
+
+# Dashboard query - get everything for network home page
+query GetNetworkDashboard($networkId: ID!) {
+  network(id: $networkId) {
+    id
+    name
+
+    # Recent incidents (last 7 days)
+    recentIncidents: sharedRecords(
+      record_type: "incident"
+      limit: 5
+      order_by: "created_at_desc"
+    ) {
+      id
+      metadata              # Contains severity, incident_type, location, etc.
+      sources {
+        org_name
+      }
+      created_at
+    }
+
+    # Potential participant matches needing review
+    potentialMatches(status: "pending_review", limit: 10) {
+      id
+      match_score
+      shared_record_a {
+        sources { org_name, dsf_view_data }
+      }
+      shared_record_b {
+        sources { org_name, dsf_view_data }
+      }
+    }
+
+    # Recent network activity notes
+    recentNotes(limit: 10, note_type: ["alert", "coordination"]) {
+      id
+      author_org_name
+      content
+      note_type
+      created_at
+    }
+
+    # Statistics
+    statistics {
+      participant_records_count
+      incident_records_count
+      potential_matches
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Search participants by name (with PII filtering)
+query SearchParticipants($networkId: ID!, $searchTerm: String!) {
+  searchNetworkSharedRecords(
+    network_id: $networkId
+    record_type: "participant"
+    search_term: $searchTerm
+  ) {
+    results {
+      id
+      status
+      match_confidence_score
+
+      # DSF view data automatically filtered by field IDs
+      sources {
+        org_name
+        dsf_view_data         # Only includes field IDs I'm allowed to see
+      }
+
+      # Show recent activity
+      responses {
+        response_type
+        created_at
+      }
+
+      notes {
+        id
+        note_type
+        created_at
+      }
+
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "searchTerm": "Marcus"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Get all incident responses for specific org (my org's dashboard)
+query GetMyOrgIncidentResponses($networkId: ID!, $myOrgId: ID!) {
+  networkSharedRecords(
+    network_id: $networkId
+    record_type: "incident"
+    status: "confirmed"
+  ) {
+    records {
+      id
+      metadata              # Incident details
+
+      # Find my org's response
+      my_org_response: responses(org_id: $myOrgId) {
+        id
+        response_type
+        response_data       # {"status": "in_progress", "planned_actions": [...]}
+        created_at
+        updated_at
+      }
+
+      # See what other orgs are doing
+      other_org_responses: responses(exclude_org_id: $myOrgId) {
+        org_name
+        response_data
+        updated_at
+      }
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "myOrgId": "102"
+# }
+
+# ============================================================================
+# DATA STANDARD VALIDATION QUERIES (Phase 0)
+# ============================================================================
+
+# Get validation rules for a data standard
+query GetDataStandardValidationRules($dataStandardId: ID!) {
+  dataStandard(id: $dataStandardId) {
+    id
+    name
+    standard_type           # 'general', 'participant', 'incident'
+
+    # Validation rules (if type is participant or incident)
+    validation_rules {
+      id
+      rule_type             # 'required_tier1', 'required_field', etc.
+      rule_config           # JSON config
+      rule_description
+      error_message
+      active
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "dataStandardId": "10"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Validate if data standard is ready for network sharing
+query ValidateDataStandard($dataStandardId: ID!) {
+  validateDataStandard(data_standard_id: $dataStandardId) {
+    is_valid
+    errors                  # Array of validation error messages
+    warnings                # Array of warnings (non-blocking)
+
+    missing_requirements {
+      requirement_type
+      description
+      how_to_fix
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "dataStandardId": "10"
+# }
+
+# ============================================================================
+# TYPE DEFINITIONS (For Reference)
+# ============================================================================
+
+# enum RecordType {
+#   PARTICIPANT
+#   INCIDENT
+# }
+
+# enum RecordStatus {
+#   PENDING
+#   CONFIRMED
+#   REJECTED
+# }
+
+# enum SourceType {
+#   APRICOT
+#   SNOWFLAKE
+# }
+
+# enum ResponseType {
+#   MATCH_CONFIRMED
+#   MATCH_REJECTED
+#   INCIDENT_RESPONDED
+#   NOTE_ADDED
+#   IMPORTED_TO_TENANT
+#   PII_REVEALED
+# }
+
+# ============================================================================
+# MIGRATION NOTES (Old Schema → New Schema)
+# ============================================================================
+
+# OLD QUERY:
+# networkParticipants(network_id: "1", match_status: "confirmed")
+
+# NEW QUERY:
+# networkSharedRecords(network_id: "1", record_type: "participant", status: "confirmed")
+
+# OLD QUERY:
+# networkIncidents(network_id: "1", severity: "critical")
+
+# NEW QUERY (filter in client):
+# networkSharedRecords(network_id: "1", record_type: "incident")
+# # Then filter client-side: records.filter(r => r.metadata.severity === "critical")
+
+# OLD QUERY:
+# networkReferrals(network_id: "1", status: "pending")
+
+# NEW QUERY:
+# N/A - Referrals moved to separate microservice
+
+# ============================================================================
+# PERFORMANCE NOTES
+# ============================================================================
+
+# Caching:
+# - networkSharedRecords: 5-minute TTL
+# - networkSharedRecord (detail): 10-minute TTL
+# - networkMemberOrgs (PII settings): 1-hour TTL
+# - potentialMatches: 5-minute TTL
+
+# Pagination:
+# - Default limit: 50 records
+# - Max limit: 100 records
+# - Always use offset for pagination
+
+# PII Filtering:
+# - Happens server-side based on field IDs in network_member_orgs.pii_fields_shared
+# - Logged in audit log with field IDs accessed
+
+# ============================================================================
+# END OF QUERIES
+# ============================================================================

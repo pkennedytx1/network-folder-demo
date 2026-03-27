@@ -1,0 +1,711 @@
+# ============================================================================
+# Network Document Folder - GraphQL Mutations (UNIFIED SCHEMA)
+# ============================================================================
+# Complete reference for all mutation operations using unified network_shared_records table
+# Key Changes:
+# - `shareRecordToNetwork` replaces separate share mutations
+# - `confirmMatch` works with shared_record_id (not participant_id)
+# - `respondToIncident` unified response mutation
+# - Referral mutations removed (separate microservice)
+# ============================================================================
+
+# ============================================================================
+# CORE MUTATIONS: SHARING & MANAGING RECORDS
+# ============================================================================
+
+# Share a local tier1 record to the network
+mutation ShareRecordToNetwork(
+  $networkId: ID!
+  $recordType: RecordType!          # 'participant' or 'incident'
+  $tenantDocumentId: ID!            # tier1_record_id in your tenant DB
+  $dsfId: ID!                       # data_standard_form_id
+  $metadata: JSON!                  # Type-specific data
+) {
+  shareRecordToNetwork(
+    network_id: $networkId
+    record_type: $recordType
+    tenant_document_id: $tenantDocumentId
+    dsf_id: $dsfId
+    metadata: $metadata
+  ) {
+    id
+    network_id
+    record_type
+    status                          # Initially 'pending'
+    metadata
+
+    sources {
+      id
+      org_id
+      org_name
+      tenant_document_id
+      dsf_id
+      source_type                   # 'apricot' or 'snowflake'
+    }
+
+    created_at
+    created_by_org_id
+  }
+}
+
+# Variables examples:
+
+# Share participant:
+# {
+#   "networkId": "1",
+#   "recordType": "participant",
+#   "tenantDocumentId": "5001",
+#   "dsfId": "201",
+#   "metadata": {
+#     "matching_algorithm_version": "1.0"
+#   }
+# }
+
+# Share incident:
+# {
+#   "networkId": "1",
+#   "recordType": "incident",
+#   "tenantDocumentId": "6001",
+#   "dsfId": "211",
+#   "metadata": {
+#     "severity": "critical",
+#     "incident_type": "shooting",
+#     "location": "1234 SE Division St, Portland, OR",
+#     "occurred_at": "2025-02-20T22:30:00Z",
+#     "tags": ["violence", "firearms"],
+#     "status": "active"
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Unshare a record from the network (remove it)
+mutation UnshareRecord($networkId: ID!, $recordId: ID!) {
+  unshareRecord(network_id: $networkId, record_id: $recordId) {
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "recordId": "123"
+# }
+
+# ============================================================================
+# PARTICIPANT MATCHING MUTATIONS
+# ============================================================================
+
+# Confirm a participant match
+mutation ConfirmMatch(
+  $networkId: ID!
+  $sharedRecordId: ID!              # The participant record to confirm
+  $sourceIds: [ID!]!                # Source records to link together
+) {
+  confirmMatch(
+    network_id: $networkId
+    shared_record_id: $sharedRecordId
+    source_ids: $sourceIds
+  ) {
+    id
+    status                          # Now 'confirmed'
+    match_confidence_score
+    metadata                        # Includes confirmed_at, confirmed_by_user_id
+
+    sources {
+      id
+      org_id
+      org_name
+      tenant_document_id
+      confirmed_by_org_user_id
+    }
+
+    # Response created for this confirmation
+    responses(response_type: "match_confirmed") {
+      id
+      org_id
+      response_data
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "4",
+#   "sourceIds": ["10", "11", "12"]
+# }
+
+# ----------------------------------------------------------------------------
+
+# Reject a potential match
+mutation RejectMatch(
+  $networkId: ID!
+  $matchId: ID!                     # potential_match_id
+  $reason: String
+) {
+  rejectMatch(
+    network_id: $networkId
+    match_id: $matchId
+    reason: $reason
+  ) {
+    success
+    message
+
+    # The potential match record (now rejected)
+    potential_match {
+      id
+      status                        # Now 'rejected'
+      reviewed_at
+      review_notes
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "matchId": "25",
+#   "reason": "Confirmed different people by both orgs"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Request human review for unclear match
+mutation RequestMatchReview(
+  $networkId: ID!
+  $matchId: ID!
+  $notes: String!
+) {
+  requestMatchReview(
+    network_id: $networkId
+    match_id: $matchId
+    notes: $notes
+  ) {
+    id
+    status                          # Now 'needs_more_info'
+    review_notes
+    reviewed_at
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "matchId": "25",
+#   "notes": "DOB within 1 day - possible data entry error. Need org verification."
+# }
+
+# ============================================================================
+# INCIDENT RESPONSE MUTATIONS
+# ============================================================================
+
+# Respond to an incident (or update existing response)
+mutation RespondToIncident(
+  $networkId: ID!
+  $sharedRecordId: ID!              # The incident record
+  $responseData: JSON!              # Org's response details
+) {
+  respondToIncident(
+    network_id: $networkId
+    shared_record_id: $sharedRecordId
+    response_data: $responseData
+  ) {
+    id
+    network_shared_record_id
+    org_id
+    org_name
+    response_type                   # 'incident_responded'
+    response_data
+    created_at
+    updated_at
+    created_by_user_id
+    created_by_user_name
+
+    # The incident record
+    shared_record {
+      id
+      metadata                      # Incident details
+      sources {
+        org_name
+      }
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "10",
+#   "responseData": {
+#     "status": "in_progress",
+#     "planned_actions": [
+#       "Contact families",
+#       "Deploy street outreach team",
+#       "Schedule community meeting"
+#     ],
+#     "current_actions": [
+#       "Families contacted",
+#       "Street team deployed"
+#     ],
+#     "completed_actions": [],
+#     "local_incident_document_id": 3500
+#   }
+# }
+
+# ----------------------------------------------------------------------------
+
+# Import shared record to your tenant DB
+mutation ImportToTenantDB(
+  $networkId: ID!
+  $sharedRecordId: ID!
+  $formId: ID!                      # Which form in your tenant to create
+) {
+  importToTenantDB(
+    network_id: $networkId
+    shared_record_id: $sharedRecordId
+    form_id: $formId
+  ) {
+    success
+    message
+    local_document_id               # New tier1_record_id in your tenant DB
+
+    # Response created for this import
+    response {
+      id
+      response_type                 # 'imported_to_tenant'
+      response_data
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "10",
+#   "formId": "223"
+# }
+
+# ============================================================================
+# NOTE MUTATIONS
+# ============================================================================
+
+# Create a network note
+mutation CreateNetworkNote(
+  $networkId: ID!
+  $sharedRecordId: ID               # Optional: attach to specific record
+  $content: String!
+  $noteType: String                 # 'general', 'coordination', 'alert', 'update'
+) {
+  createNetworkNote(
+    network_id: $networkId
+    network_shared_record_id: $sharedRecordId
+    content: $content
+    note_type: $noteType
+  ) {
+    id
+    network_id
+    network_shared_record_id
+
+    author_org_id
+    author_org_name
+    author_user_id
+    author_user_name
+
+    content
+    note_type
+
+    created_at
+  }
+}
+
+# Variables examples:
+
+# Note on specific participant:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "1",
+#   "content": "Marcus has been attending weekly check-ins. Positive progress.",
+#   "noteType": "update"
+# }
+
+# General network note:
+# {
+#   "networkId": "1",
+#   "content": "Monthly coordination meeting March 1st at 2pm.",
+#   "noteType": "coordination"
+# }
+
+# Alert about incident:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "10",
+#   "content": "URGENT: Potential retaliation. Increased patrols needed.",
+#   "noteType": "alert"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Update a network note (edit content)
+mutation UpdateNetworkNote(
+  $noteId: ID!
+  $content: String!
+) {
+  updateNetworkNote(
+    note_id: $noteId
+    content: $content
+  ) {
+    id
+    content
+    updated_at
+    edited                          # Now true
+  }
+}
+
+# Variables example:
+# {
+#   "noteId": "456",
+#   "content": "Updated: Marcus has completed job placement program!"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Delete a network note
+mutation DeleteNetworkNote($noteId: ID!) {
+  deleteNetworkNote(note_id: $noteId) {
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "noteId": "456"
+# }
+
+# ============================================================================
+# PII SETTINGS MUTATIONS
+# ============================================================================
+
+# Update my org's PII sharing settings
+mutation UpdatePIISettings(
+  $networkId: ID!
+  $piiSharingEnabled: Boolean!
+  $fieldsShared: [Int!]!            # Field IDs to share: [4721, 4722, 4723]
+) {
+  updatePIISettings(
+    network_id: $networkId
+    pii_sharing_enabled: $piiSharingEnabled
+    pii_fields_shared: $fieldsShared
+  ) {
+    org_id
+    org_name
+    pii_sharing_enabled
+    pii_fields_shared
+    pii_consent_confirmed_at
+    pii_consent_confirmed_by_user_name
+  }
+}
+
+# Variables examples:
+
+# Enable full PII sharing:
+# {
+#   "networkId": "1",
+#   "piiSharingEnabled": true,
+#   "fieldsShared": [4721, 4722, 4723, 4724, 4725]
+# }
+
+# Enable partial PII sharing (name and DOB only):
+# {
+#   "networkId": "1",
+#   "piiSharingEnabled": true,
+#   "fieldsShared": [4721, 4722]
+# }
+
+# Disable PII sharing:
+# {
+#   "networkId": "1",
+#   "piiSharingEnabled": false,
+#   "fieldsShared": []
+# }
+
+# ============================================================================
+# ADMIN MUTATIONS
+# ============================================================================
+
+# Add organization to network
+mutation AddOrgToNetwork(
+  $networkId: ID!
+  $orgId: ID!
+  $memberType: String!              # 'internal' or 'external'
+  $dsfId: ID                        # For internal (Apricot)
+  $snowflakeView: String            # For external (Snowflake)
+) {
+  addOrgToNetwork(
+    network_id: $networkId
+    org_id: $orgId
+    member_type: $memberType
+    data_standard_form_id: $dsfId
+    snowflake_view: $snowflakeView
+  ) {
+    id
+    org_id
+    org_name
+    member_type
+    active
+    joined_at
+  }
+}
+
+# Variables examples:
+
+# Add internal org (Apricot):
+# {
+#   "networkId": "1",
+#   "orgId": "107",
+#   "memberType": "internal",
+#   "dsfId": "207"
+# }
+
+# Add external org (Snowflake):
+# {
+#   "networkId": "1",
+#   "orgId": "108",
+#   "memberType": "external",
+#   "snowflakeView": "dsf_208_view"
+# }
+
+# ----------------------------------------------------------------------------
+
+# Remove organization from network
+mutation RemoveOrgFromNetwork($networkId: ID!, $orgId: ID!) {
+  removeOrgFromNetwork(network_id: $networkId, org_id: $orgId) {
+    success
+    message
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "orgId": "107"
+# }
+
+# ============================================================================
+# BATCH MUTATIONS (For Efficiency)
+# ============================================================================
+
+# Share multiple records at once
+mutation ShareMultipleRecords(
+  $networkId: ID!
+  $records: [ShareRecordInput!]!
+) {
+  shareMultipleRecords(
+    network_id: $networkId
+    records: $records
+  ) {
+    success
+    message
+    created_count
+    failed_count
+
+    created_records {
+      id
+      record_type
+      tenant_document_id
+    }
+
+    errors {
+      tenant_document_id
+      error_message
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "records": [
+#     {
+#       "recordType": "participant",
+#       "tenantDocumentId": "5001",
+#       "dsfId": "201",
+#       "metadata": {"matching_algorithm_version": "1.0"}
+#     },
+#     {
+#       "recordType": "participant",
+#       "tenantDocumentId": "5002",
+#       "dsfId": "201",
+#       "metadata": {"matching_algorithm_version": "1.0"}
+#     }
+#   ]
+# }
+
+# ============================================================================
+# COMPLEX MUTATIONS (Common Workflows)
+# ============================================================================
+
+# Share incident and link participants in one operation
+mutation ShareIncidentWithParticipants(
+  $networkId: ID!
+  $tenantDocumentId: ID!
+  $dsfId: ID!
+  $metadata: JSON!
+  $participantIds: [ID!]!           # Shared record IDs of participants
+) {
+  shareIncidentWithParticipants(
+    network_id: $networkId
+    tenant_document_id: $tenantDocumentId
+    dsf_id: $dsfId
+    metadata: $metadata
+    participant_ids: $participantIds
+  ) {
+    incident {
+      id
+      metadata
+      sources {
+        org_name
+      }
+    }
+
+    linked_participants {
+      id
+      sources {
+        org_name
+      }
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "tenantDocumentId": "6001",
+#   "dsfId": "211",
+#   "metadata": {
+#     "severity": "high",
+#     "incident_type": "assault",
+#     "location": "Portland, OR",
+#     "occurred_at": "2025-03-01T18:00:00Z"
+#   },
+#   "participantIds": ["1", "3"]
+# }
+
+# ----------------------------------------------------------------------------
+
+# Confirm match and add note in one operation
+mutation ConfirmMatchWithNote(
+  $networkId: ID!
+  $sharedRecordId: ID!
+  $sourceIds: [ID!]!
+  $noteContent: String!
+) {
+  confirmMatchWithNote(
+    network_id: $networkId
+    shared_record_id: $sharedRecordId
+    source_ids: $sourceIds
+    note_content: $noteContent
+  ) {
+    confirmed_record {
+      id
+      status
+      match_confidence_score
+    }
+
+    note {
+      id
+      content
+      created_at
+    }
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1",
+#   "sharedRecordId": "4",
+#   "sourceIds": ["10", "11"],
+#   "noteContent": "Match confirmed after reviewing case notes from both orgs."
+# }
+
+# ============================================================================
+# MIGRATION NOTES (Old Schema → New Schema)
+# ============================================================================
+
+# OLD MUTATION:
+# confirmParticipantMatch(participant_id: "4", source_ids: ["10", "11"])
+
+# NEW MUTATION:
+# confirmMatch(shared_record_id: "4", source_ids: ["10", "11"])
+
+# OLD MUTATION:
+# createNetworkIncident(input: {...})
+
+# NEW MUTATION:
+# shareRecordToNetwork(record_type: "incident", tenant_document_id: "6001", metadata: {...})
+
+# OLD MUTATION:
+# createReferral(input: {...})
+
+# NEW MUTATION:
+# N/A - Referrals moved to separate microservice
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+
+# All mutations return errors in a standardized format:
+
+# Success response:
+# {
+#   "data": {
+#     "mutationName": { ... }
+#   }
+# }
+
+# Error response:
+# {
+#   "data": null,
+#   "errors": [
+#     {
+#       "message": "Access denied",
+#       "extensions": {
+#         "code": "FORBIDDEN",
+#         "details": "You must be a network member to share records"
+#       }
+#     }
+#   ]
+# }
+
+# ============================================================================
+# OPTIMISTIC UPDATES (Client-Side)
+# ============================================================================
+
+# Example React Hook for optimistic update:
+
+# const [confirmMatch] = useMutation(CONFIRM_MATCH_MUTATION, {
+#   optimisticResponse: {
+#     confirmMatch: {
+#       id: recordId,
+#       status: 'confirmed',
+#       __typename: 'NetworkSharedRecord'
+#     }
+#   },
+#   update: (cache, { data }) => {
+#     // Update cache immediately
+#     cache.modify({
+#       id: cache.identify({ __typename: 'NetworkSharedRecord', id: recordId }),
+#       fields: {
+#         status: () => 'confirmed'
+#       }
+#     });
+#   }
+# });
+
+# ============================================================================
+# END OF MUTATIONS
+# ============================================================================

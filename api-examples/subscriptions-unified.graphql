@@ -1,0 +1,566 @@
+# ============================================================================
+# Network Document Folder - GraphQL Subscriptions (UNIFIED SCHEMA)
+# ============================================================================
+# Real-time updates for unified network_shared_records table
+# Key Changes:
+# - Single `recordUpdated` subscription for all types (replaces separate subscriptions)
+# - Filter by `record_type` for participant vs incident updates
+# - Unified event payload structure
+# ============================================================================
+
+# ============================================================================
+# CORE SUBSCRIPTION: RECORD UPDATES
+# ============================================================================
+
+# Subscribe to updates for any record type
+subscription RecordUpdated(
+  $networkId: ID!
+  $recordType: RecordType     # Optional: filter by 'participant' or 'incident'
+) {
+  recordUpdated(
+    network_id: $networkId
+    record_type: $recordType
+  ) {
+    # The updated record
+    record {
+      id
+      network_id
+      record_type
+      status
+      match_confidence_score
+      metadata
+
+      sources {
+        id
+        org_id
+        org_name
+        tenant_document_id
+        dsf_id
+        source_type
+        dsf_view_data       # PII filtered automatically
+      }
+
+      responses {
+        id
+        org_id
+        org_name
+        response_type
+        response_data
+        created_at
+      }
+    }
+
+    # Change metadata
+    change_type               # 'CREATED', 'UPDATED', 'DELETED', 'MATCH_CONFIRMED'
+    changed_by_org_id
+    changed_by_org_name
+    changed_by_user_id
+    changed_by_user_name
+    changed_at
+  }
+}
+
+# Variables examples:
+
+# Subscribe to all record types:
+# {
+#   "networkId": "1"
+# }
+
+# Subscribe to participant updates only:
+# {
+#   "networkId": "1",
+#   "recordType": "participant"
+# }
+
+# Subscribe to incident updates only:
+# {
+#   "networkId": "1",
+#   "recordType": "incident"
+# }
+
+# ============================================================================
+# PARTICIPANT-SPECIFIC SUBSCRIPTION
+# ============================================================================
+
+# Subscribe to potential match detections
+subscription MatchDetected($networkId: ID!) {
+  matchDetected(network_id: $networkId) {
+    # The potential match that was detected
+    potential_match {
+      id
+      network_id
+      match_score
+      match_factors         # JSON: {"ssn": 45, "dob": 35, "name": 20}
+      status
+      created_at
+
+      shared_record_a {
+        id
+        sources {
+          org_name
+          dsf_view_data   # PII filtered
+        }
+      }
+
+      shared_record_b {
+        id
+        sources {
+          org_name
+          dsf_view_data   # PII filtered
+        }
+      }
+    }
+
+    # Context
+    detected_at
+    detection_algorithm_version
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# NOTES SUBSCRIPTION
+# ============================================================================
+
+# Subscribe to new notes in network
+subscription NoteAdded(
+  $networkId: ID!
+  $noteType: String         # Optional: filter by note type
+) {
+  noteAdded(
+    network_id: $networkId
+    note_type: $noteType
+  ) {
+    note {
+      id
+      network_id
+      network_shared_record_id
+
+      author_org_id
+      author_org_name
+      author_user_id
+      author_user_name
+
+      content
+      note_type
+      created_at
+    }
+  }
+}
+
+# Variables examples:
+
+# All notes:
+# {
+#   "networkId": "1"
+# }
+
+# Alert notes only:
+# {
+#   "networkId": "1",
+#   "noteType": "alert"
+# }
+
+# ============================================================================
+# ORG MEMBERSHIP SUBSCRIPTION
+# ============================================================================
+
+# Subscribe to network membership changes (admin only)
+subscription NetworkMembershipChanged($networkId: ID!) {
+  networkMembershipChanged(network_id: $networkId) {
+    change_type             # 'ORG_JOINED', 'ORG_REMOVED', 'PII_SETTINGS_CHANGED'
+
+    affected_org {
+      org_id
+      org_name
+      member_type
+      pii_sharing_enabled
+      pii_fields_shared
+      active
+      joined_at
+      removed_at
+    }
+
+    changed_at
+    changed_by_user_id
+  }
+}
+
+# Variables example:
+# {
+#   "networkId": "1"
+# }
+
+# ============================================================================
+# REACT HOOK EXAMPLES
+# ============================================================================
+
+# Example: useRecordSubscription hook
+#
+# import { useSubscription } from 'react-relay';
+# import { graphql } from 'relay-runtime';
+#
+# const RECORD_UPDATED_SUBSCRIPTION = graphql`
+#   subscription RecordUpdatedSubscription($networkId: ID!, $recordType: RecordType) {
+#     recordUpdated(network_id: $networkId, record_type: $recordType) {
+#       record {
+#         id
+#         status
+#         metadata
+#       }
+#       change_type
+#       changed_by_org_name
+#     }
+#   }
+# `;
+#
+# function useRecordSubscription(networkId: string, recordType?: 'participant' | 'incident') {
+#   const { data } = useSubscription({
+#     subscription: RECORD_UPDATED_SUBSCRIPTION,
+#     variables: { networkId, recordType }
+#   });
+#
+#   useEffect(() => {
+#     if (data?.recordUpdated) {
+#       // Show toast notification
+#       toast.info(`${data.recordUpdated.change_type}: Record updated by ${data.recordUpdated.changed_by_org_name}`);
+#
+#       // Invalidate cache
+#       queryClient.invalidateQueries(['network', networkId, 'records']);
+#     }
+#   }, [data]);
+#
+#   return data?.recordUpdated;
+# }
+
+# ============================================================================
+# APOLLO CLIENT EXAMPLES
+# ============================================================================
+
+# Example: Apollo Client subscription with React
+#
+# import { useSubscription } from '@apollo/client';
+# import { gql } from '@apollo/client';
+#
+# const RECORD_UPDATED_SUBSCRIPTION = gql`
+#   subscription OnRecordUpdated($networkId: ID!) {
+#     recordUpdated(network_id: $networkId) {
+#       record {
+#         id
+#         record_type
+#         status
+#         metadata
+#       }
+#       change_type
+#       changed_by_org_name
+#       changed_at
+#     }
+#   }
+# `;
+#
+# function ParticipantList({ networkId }) {
+#   const { data, loading } = useSubscription(RECORD_UPDATED_SUBSCRIPTION, {
+#     variables: { networkId }
+#   });
+#
+#   useEffect(() => {
+#     if (data?.recordUpdated) {
+#       console.log('Record updated:', data.recordUpdated);
+#
+#       // Update local cache
+#       client.cache.modify({
+#         id: client.cache.identify({
+#           __typename: 'NetworkSharedRecord',
+#           id: data.recordUpdated.record.id
+#         }),
+#         fields: {
+#           status: () => data.recordUpdated.record.status,
+#           metadata: () => data.recordUpdated.record.metadata
+#         }
+#       });
+#     }
+#   }, [data]);
+#
+#   return <div>...</div>;
+# }
+
+# ============================================================================
+# CONNECTION STATUS MONITORING
+# ============================================================================
+
+# Example: Monitor WebSocket connection status
+#
+# import { useEffect, useState } from 'react';
+#
+# function useConnectionStatus() {
+#   const [isConnected, setIsConnected] = useState(false);
+#   const [reconnecting, setReconnecting] = useState(false);
+#
+#   useEffect(() => {
+#     // Apollo Client subscription link provides connection status
+#     const subscriptionClient = wsLink.subscriptionClient;
+#
+#     subscriptionClient.on('connected', () => {
+#       setIsConnected(true);
+#       setReconnecting(false);
+#     });
+#
+#     subscriptionClient.on('reconnecting', () => {
+#       setIsConnected(false);
+#       setReconnecting(true);
+#     });
+#
+#     subscriptionClient.on('disconnected', () => {
+#       setIsConnected(false);
+#       setReconnecting(false);
+#     });
+#
+#     return () => {
+#       subscriptionClient.close();
+#     };
+#   }, []);
+#
+#   return { isConnected, reconnecting };
+# }
+#
+# // Usage:
+# function NetworkHeader({ networkId }) {
+#   const { isConnected, reconnecting } = useConnectionStatus();
+#
+#   return (
+#     <header>
+#       <h1>Network Document Folder</h1>
+#       {reconnecting && <span>Reconnecting...</span>}
+#       {!isConnected && !reconnecting && <span>Disconnected</span>}
+#       {isConnected && <span className="pulse-green">Connected</span>}
+#     </header>
+#   );
+# }
+
+# ============================================================================
+# SUBSCRIPTION FILTERING (Server-Side)
+# ============================================================================
+
+# Server-side filter example (in resolver):
+#
+# import { withFilter } from 'graphql-subscriptions';
+#
+# export const subscriptionResolvers = {
+#   Subscription: {
+#     recordUpdated: {
+#       subscribe: withFilter(
+#         (_, { network_id }, { pubsub }) => {
+#           return pubsub.asyncIterator([`RECORD_UPDATED_${network_id}`]);
+#         },
+#         (payload, variables) => {
+#           // Filter by record_type if specified
+#           if (variables.record_type) {
+#             return payload.recordUpdated.record.record_type === variables.record_type;
+#           }
+#           return true;
+#         }
+#       ),
+#       resolve: (payload) => payload.recordUpdated
+#     }
+#   }
+# };
+
+# ============================================================================
+# PUBLISHING EVENTS (Server-Side)
+# ============================================================================
+
+# Example: Publishing an event after mutation
+#
+# // After confirming a match
+# await context.pubsub.publish(`RECORD_UPDATED_${networkId}`, {
+#   recordUpdated: {
+#     record: updatedRecord,
+#     change_type: 'MATCH_CONFIRMED',
+#     changed_by_org_id: context.user.org_id,
+#     changed_by_org_name: context.user.org.name,
+#     changed_by_user_id: context.user.id,
+#     changed_by_user_name: context.user.name,
+#     changed_at: new Date().toISOString()
+#   }
+# });
+#
+# // After sharing a new incident
+# await context.pubsub.publish(`RECORD_UPDATED_${networkId}`, {
+#   recordUpdated: {
+#     record: newIncident,
+#     change_type: 'CREATED',
+#     changed_by_org_id: context.user.org_id,
+#     changed_by_org_name: context.user.org.name,
+#     changed_by_user_id: context.user.id,
+#     changed_by_user_name: context.user.name,
+#     changed_at: new Date().toISOString()
+#   }
+# });
+#
+# // After detecting potential match
+# await context.pubsub.publish(`MATCH_DETECTED_${networkId}`, {
+#   matchDetected: {
+#     potential_match: newMatch,
+#     detected_at: new Date().toISOString(),
+#     detection_algorithm_version: '1.0'
+#   }
+# });
+
+# ============================================================================
+# OPTIMISTIC UPDATES WITH SUBSCRIPTIONS
+# ============================================================================
+
+# Example: Optimistic update that gets corrected by subscription
+#
+# const [confirmMatch, { loading }] = useMutation(CONFIRM_MATCH_MUTATION, {
+#   optimisticResponse: {
+#     confirmMatch: {
+#       id: recordId,
+#       status: 'confirmed',
+#       __typename: 'NetworkSharedRecord'
+#     }
+#   },
+#   update: (cache, { data }) => {
+#     // Optimistically update UI
+#     cache.modify({
+#       id: cache.identify({ __typename: 'NetworkSharedRecord', id: recordId }),
+#       fields: {
+#         status: () => 'confirmed'
+#       }
+#     });
+#   }
+# });
+#
+# // Subscription will correct if server response differs
+# useSubscription(RECORD_UPDATED_SUBSCRIPTION, {
+#   variables: { networkId },
+#   onData: ({ client, data }) => {
+#     if (data.data.recordUpdated.record.id === recordId) {
+#       // Server response - replace optimistic update
+#       client.cache.writeFragment({
+#         id: cache.identify({ __typename: 'NetworkSharedRecord', id: recordId }),
+#         fragment: gql`
+#           fragment UpdatedRecord on NetworkSharedRecord {
+#             status
+#             metadata
+#           }
+#         `,
+#         data: data.data.recordUpdated.record
+#       });
+#     }
+#   }
+# });
+
+# ============================================================================
+# BATCHING SUBSCRIPTION UPDATES
+# ============================================================================
+
+# Example: Batch multiple rapid updates to avoid UI thrashing
+#
+# import { useMemo, useEffect } from 'react';
+# import debounce from 'lodash/debounce';
+#
+# function useRecordSubscriptionBatched(networkId: string) {
+#   const [pendingUpdates, setPendingUpdates] = useState([]);
+#
+#   const { data } = useSubscription(RECORD_UPDATED_SUBSCRIPTION, {
+#     variables: { networkId }
+#   });
+#
+#   // Batch updates for 500ms
+#   const processBatch = useMemo(
+#     () => debounce(() => {
+#       if (pendingUpdates.length > 0) {
+#         // Process all pending updates at once
+#         queryClient.invalidateQueries(['network', networkId, 'records']);
+#         setPendingUpdates([]);
+#       }
+#     }, 500),
+#     [pendingUpdates]
+#   );
+#
+#   useEffect(() => {
+#     if (data?.recordUpdated) {
+#       setPendingUpdates(prev => [...prev, data.recordUpdated]);
+#       processBatch();
+#     }
+#   }, [data]);
+#
+#   return pendingUpdates;
+# }
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+
+# Example: Handle subscription errors
+#
+# const { data, error } = useSubscription(RECORD_UPDATED_SUBSCRIPTION, {
+#   variables: { networkId },
+#   onError: (error) => {
+#     console.error('Subscription error:', error);
+#
+#     // Show user-friendly message
+#     toast.error('Lost connection to real-time updates. Reconnecting...');
+#
+#     // Optional: Fall back to polling
+#     startPolling(5000); // Poll every 5 seconds
+#   },
+#   onComplete: () => {
+#     console.log('Subscription completed (connection closed)');
+#   }
+# });
+
+# ============================================================================
+# PERFORMANCE TIPS
+# ============================================================================
+
+# 1. Filter subscriptions on the server (not client)
+#    - Use `withFilter` in resolver to avoid sending unnecessary data
+#
+# 2. Unsubscribe when component unmounts
+#    - React hooks handle this automatically, but check for manual subscriptions
+#
+# 3. Batch rapid updates
+#    - Use debouncing to avoid UI thrashing from multiple rapid updates
+#
+# 4. Limit subscription scope
+#    - Subscribe to specific record types when possible
+#    - Avoid subscribing to networks with 1000s of records
+#
+# 5. Monitor connection status
+#    - Show visual indicator when disconnected
+#    - Implement reconnection logic with exponential backoff
+#
+# 6. Consider polling as fallback
+#    - If subscription fails, fall back to periodic polling
+#    - Automatically switch back to subscriptions when connection restored
+
+# ============================================================================
+# MIGRATION NOTES (Old Schema → New Schema)
+# ============================================================================
+
+# OLD SUBSCRIPTIONS:
+# - participantUpdated(network_id: ID!)
+# - incidentUpdated(network_id: ID!)
+# - matchDetected(network_id: ID!)
+
+# NEW UNIFIED SUBSCRIPTION:
+# - recordUpdated(network_id: ID!, record_type: RecordType)
+#   - Single subscription handles both participants and incidents
+#   - Filter by record_type if needed
+#   - Same payload structure for all types
+
+# BENEFITS:
+# - Fewer WebSocket connections (1 instead of 2+)
+# - Consistent event handling code
+# - Easier to add new record types (no new subscriptions needed)
+
+# ============================================================================
+# END OF SUBSCRIPTIONS
+# ============================================================================
