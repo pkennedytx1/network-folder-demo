@@ -273,7 +273,12 @@
             border-bottom: none;
         }
 
-        tr:hover {
+        tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        tbody tr:hover {
             background: var(--gray-50);
         }
 
@@ -2757,13 +2762,12 @@
                                     <th>Match Status</th>
                                     <th>Orgs Matched</th>
                                     <th>Last Updated</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr onclick="showParticipantDetail('P-1024')">
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail('P-1024'); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1024</a>
+                                        <span style="color: var(--primary-teal); font-weight: 600;">P-1024</span>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2775,11 +2779,10 @@
                                         </div>
                                     </td>
                                     <td>2 hours ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
-                                <tr>
+                                <tr onclick="showMatchModal()">
                                     <td>
-                                        <a href="#" onclick="showMatchModal(); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1031</a>
+                                        <span style="color: var(--primary-teal); font-weight: 600;">P-1031</span>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-medium">⚠ Potential Match</span>
@@ -2791,11 +2794,10 @@
                                         </div>
                                     </td>
                                     <td>5 hours ago</td>
-                                    <td><button class="view-btn" onclick="showMatchModal()">🔍 Review</button></td>
                                 </tr>
-                                <tr>
+                                <tr onclick="showParticipantDetail('P-1042')">
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1042</a>
+                                        <span style="color: var(--primary-teal); font-weight: 600;">P-1042</span>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2807,11 +2809,10 @@
                                         </div>
                                     </td>
                                     <td>1 day ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
-                                <tr>
+                                <tr onclick="showMatchModal()">
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1056</a>
+                                        <span style="color: var(--primary-teal); font-weight: 600;">P-1056</span>
                                     </td>
                                     <td>
                                         <span class="severity-badge" style="background: #dbeafe; color: var(--blue);">○ Pending Verification</span>
@@ -2823,7 +2824,6 @@
                                         </div>
                                     </td>
                                     <td>3 days ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2846,13 +2846,12 @@
                                     <th>Match Status</th>
                                     <th>Orgs Matched</th>
                                     <th>Last Updated</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr onclick="showParticipantDetail('P-1063')">
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1063</a>
+                                        <span style="color: var(--primary-teal); font-weight: 600;">P-1063</span>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2864,7 +2863,6 @@
                                         </div>
                                     </td>
                                     <td>6 hours ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2891,7 +2889,6 @@
                                     <th>Consent Status</th>
                                     <th>Potential Matches</th>
                                     <th>Last Updated</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2912,7 +2909,6 @@
                                         <span style="color: var(--gray-600);">2 possible (can't verify)</span>
                                     </td>
                                     <td>4 hours ago</td>
-                                    <td><button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;"><i class="fas fa-lock"></i> Locked</button></td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -2931,7 +2927,6 @@
                                         <span style="color: var(--gray-600);">1 possible (can't verify)</span>
                                     </td>
                                     <td>1 day ago</td>
-                                    <td><button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;"><i class="fas fa-lock"></i> Locked</button></td>
                                 </tr>
                                 <tr style="cursor: pointer;" onclick="showConsentModal()">
                                     <td>
@@ -2953,7 +2948,6 @@
                                         </div>
                                     </td>
                                     <td>2 days ago</td>
-                                    <td><button class="view-btn" style="background: var(--orange); border-color: var(--orange);"><i class="fas fa-search"></i> Review Match</button></td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -2972,7 +2966,6 @@
                                         <span style="color: var(--gray-600);">—</span>
                                     </td>
                                     <td>3 days ago</td>
-                                    <td><button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;"><i class="fas fa-lock"></i> Locked</button></td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -2991,7 +2984,6 @@
                                         <span style="color: var(--gray-600);">—</span>
                                     </td>
                                     <td>5 days ago</td>
-                                    <td><button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;"><i class="fas fa-lock"></i> Locked</button></td>
                                 </tr>
                                 <tr>
                                     <td colspan="6" style="text-align: center; padding: 12px; background: var(--gray-50); color: var(--gray-600); font-size: 12px;">
@@ -3602,7 +3594,6 @@
                                     <td><span class="severity-badge severity-critical">Critical</span></td>
                                     <td><span class="severity-badge severity-low">Accepted</span></td>
                                     <td>Mar 16, 2025<br><span style="font-size: 11px; color: var(--gray-600);">8 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr style="background: #fef3c733;">
                                     <td><strong>Jasmine Rodriguez</strong></td>
@@ -3618,7 +3609,6 @@
                                     <td><span class="severity-badge" style="background: #dbeafe; color: var(--blue);">Routine</span></td>
                                     <td><span class="severity-badge severity-medium">Pending</span></td>
                                     <td>Mar 18, 2025<br><span style="font-size: 11px; color: var(--gray-600);">6 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Marcus Thompson</strong></td>
@@ -3634,7 +3624,6 @@
                                     <td><span class="severity-badge" style="background: #dbeafe; color: var(--blue);">Routine</span></td>
                                     <td><span class="severity-badge severity-low">Accepted</span></td>
                                     <td>Mar 10, 2025<br><span style="font-size: 11px; color: var(--gray-600);">14 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>

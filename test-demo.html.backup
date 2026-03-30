@@ -769,304 +769,6 @@
         }
 
         /* Consensus Builder Styles */
-        /* Match Review Modal Styles */
-        .match-review-modal .modal-content {
-            max-width: 1100px;
-        }
-
-        .match-comparison {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 32px;
-            align-items: start;
-            margin: 24px 0;
-        }
-
-        .participant-card {
-            background: var(--gray-50);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .participant-card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .org-logo {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            background: var(--primary-teal);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        .org-logo.secondary {
-            background: var(--blue);
-        }
-
-        .participant-card-title {
-            flex: 1;
-        }
-
-        .org-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 4px;
-        }
-
-        .record-id {
-            font-size: 12px;
-            color: var(--gray-600);
-        }
-
-        .field-comparison {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .field-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .field-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--gray-600);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .field-value {
-            font-size: 15px;
-            color: var(--gray-900);
-            font-weight: 500;
-        }
-
-        .match-indicator {
-            flex-shrink: 0;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-
-        .match-indicator.match {
-            background: #dcfce7;
-            color: var(--green);
-        }
-
-        .match-indicator.similar {
-            background: #fef3c7;
-            color: #f59e0b;
-        }
-
-        .match-indicator.no-match {
-            background: #fee2e2;
-            color: var(--red);
-        }
-
-        .score-circle-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding-top: 40px;
-        }
-
-        .score-circle {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: conic-gradient(
-                var(--primary-teal) 0deg,
-                var(--primary-teal) calc(var(--score) * 3.6deg),
-                var(--gray-200) calc(var(--score) * 3.6deg),
-                var(--gray-200) 360deg
-            );
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-
-        .score-circle::before {
-            content: '';
-            position: absolute;
-            width: 108px;
-            height: 108px;
-            border-radius: 50%;
-            background: white;
-        }
-
-        .score-number {
-            position: relative;
-            z-index: 1;
-            font-size: 48px;
-            font-weight: 700;
-            color: var(--gray-900);
-            line-height: 1;
-        }
-
-        .score-label {
-            position: relative;
-            z-index: 1;
-            font-size: 13px;
-            color: var(--gray-600);
-            margin-top: 4px;
-        }
-
-        .confidence-badge {
-            margin-top: 16px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .confidence-badge.high {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .confidence-badge.medium {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .confidence-badge.low {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .algorithm-breakdown {
-            background: var(--gray-50);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 24px;
-        }
-
-        .breakdown-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .breakdown-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 16px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-        }
-
-        .breakdown-row:last-child {
-            border-bottom: none;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .breakdown-criterion {
-            font-size: 13px;
-            color: var(--gray-700);
-        }
-
-        .breakdown-bar {
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .breakdown-bar-fill {
-            height: 100%;
-            background: var(--primary-teal);
-            transition: width 0.5s ease;
-        }
-
-        .breakdown-points {
-            font-size: 14px;
-            color: var(--gray-900);
-            text-align: right;
-        }
-
-        .match-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        .btn-reject {
-            background: white;
-            color: var(--red);
-            border: 2px solid var(--red);
-        }
-
-        .btn-reject:hover {
-            background: #fee2e2;
-        }
-
-        .btn-review {
-            background: white;
-            color: var(--gray-700);
-            border: 2px solid var(--gray-300);
-        }
-
-        .btn-review:hover {
-            background: var(--gray-50);
-        }
-
-        .btn-confirm {
-            background: var(--green);
-            color: white;
-            border: 2px solid var(--green);
-        }
-
-        .btn-confirm:hover {
-            background: #15803d;
-        }
-
-        @media (max-width: 900px) {
-            .match-comparison {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-
-            .score-circle-container {
-                order: -1;
-                padding-top: 0;
-                padding-bottom: 24px;
-            }
-        }
-
         .consensus-intro {
             background: #fef3c7;
             border: 1px solid #fde68a;
@@ -1420,56 +1122,18 @@
         .status-key-inline {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 13px;
-            color: var(--gray-700);
+            gap: 16px;
+            font-size: 12px;
         }
 
         .status-key-item {
-            position: relative;
-            cursor: help;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .status-key-badge {
-            cursor: help;
             font-size: 11px;
-            transition: transform 0.2s ease;
-        }
-
-        .status-key-badge:hover {
-            transform: scale(1.05);
-        }
-
-        .status-key-item .tooltip {
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--gray-900);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .status-key-item .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: var(--gray-900);
-        }
-
-        .status-key-item:hover .tooltip {
-            opacity: 1;
         }
 
 
@@ -3512,7 +3176,7 @@
                                     </td>
                                     <td>2 hours ago</td>
                                 </tr>
-                                <tr class="conflict-row" onclick="showMatchModal()">
+                                <tr onclick="showMatchModal()">
                                     <td>
                                         <span style="color: var(--primary-teal); font-weight: 600;">P-1031</span>
                                     </td>
@@ -3521,18 +3185,18 @@
                                     </td>
                                     <td>
                                         <div class="org-confirmation-list">
-                                            <span class="org-confirmation-badge pending">
-                                                <i class="fas fa-clock"></i> LO
+                                            <span class="org-confirmation-badge">
+                                                <i class="fas fa-check"></i> LO
                                             </span>
-                                            <span class="org-confirmation-badge pending">
-                                                <i class="fas fa-clock"></i> SO
+                                            <span class="org-confirmation-badge">
+                                                <i class="fas fa-check"></i> SO
                                             </span>
-                                            <span class="org-confirmation-count">(0/2 confirmed)</span>
+                                            <span class="org-confirmation-count">(2/2 matched)</span>
                                         </div>
                                     </td>
                                     <td>5 hours ago</td>
                                 </tr>
-                                <tr onclick="showConsensusBuilder()">
+                                <tr class="conflict-row" onclick="showConsensusBuilder()">
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <span style="color: var(--primary-teal); font-weight: 600;">P-1042</span>
@@ -3576,10 +3240,16 @@
                                     </td>
                                     <td>
                                         <div class="org-confirmation-list">
+                                            <span class="org-confirmation-badge">
+                                                <i class="fas fa-check"></i> LO
+                                            </span>
+                                            <span class="org-confirmation-badge pending">
+                                                <i class="fas fa-clock"></i> PA
+                                            </span>
                                             <span class="org-confirmation-badge pending">
                                                 <i class="fas fa-clock"></i> YS
                                             </span>
-                                            <span class="org-confirmation-count">(0/1 confirmed)</span>
+                                            <span class="org-confirmation-count">(1/3 confirmed)</span>
                                         </div>
                                     </td>
                                     <td>3 days ago</td>
@@ -3588,18 +3258,17 @@
                         </table>
                         <div class="pagination-footer">
                             <div class="status-key-inline">
-                                <span style="font-weight: 600; color: var(--gray-700);">Key:</span>
                                 <div class="status-key-item">
                                     <span class="severity-badge severity-low status-key-badge">○ Confirmed</span>
-                                    <div class="tooltip">Confirmed = Identity & data synced</div>
+                                    <span style="color: var(--gray-600);">= Identity & data synced</span>
                                 </div>
                                 <div class="status-key-item">
                                     <span class="severity-badge severity-medium status-key-badge">⚠ Potential Match</span>
-                                    <div class="tooltip">Potential Match = Needs confirmation</div>
+                                    <span style="color: var(--gray-600);">= Needs confirmation</span>
                                 </div>
                                 <div class="status-key-item">
                                     <span class="severity-badge status-key-badge" style="background: #dbeafe; color: var(--blue);">○ Pending</span>
-                                    <div class="tooltip">Pending Verification = Awaiting review</div>
+                                    <span style="color: var(--gray-600);">= Awaiting review</span>
                                 </div>
                             </div>
                             <div class="pagination-controls">
@@ -4566,184 +4235,74 @@
     </div>
 
     <!-- Match Review Modal -->
-    <div id="match-review-modal" class="modal match-review-modal">
+    <div id="match-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div>
-                    <div class="modal-title">Review Potential Match</div>
-                    <div class="modal-subtitle">Compare records to determine if these are the same person</div>
-                </div>
-                <button class="modal-close" onclick="closeMatchReview()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2 class="modal-title">Review Potential Match</h2>
+                <button class="close-btn" onclick="closeMatchModal()">✕</button>
             </div>
-
             <div class="modal-body">
-                <div class="match-comparison">
-                    <!-- Left Card -->
-                    <div class="participant-card">
-                        <div class="participant-card-header">
-                            <div class="org-logo">LO</div>
-                            <div class="participant-card-title">
-                                <div class="org-name">Lead Org (Peacemakers Austin)</div>
-                                <div class="record-id">Record #457</div>
-                            </div>
-                        </div>
-                        <div class="field-comparison">
-                            <div>
-                                <div class="field-label">Name</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">Johnson, Marcus</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">Date of Birth</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">March 15, 1998</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">SSN Last 4</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">8362</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">Address</div>
-                                <div class="field-row">
-                                    <div class="match-indicator similar">
-                                        <i class="fas fa-exclamation"></i>
-                                    </div>
-                                    <div class="field-value">145 Oak Street<br>Portland, OR 97214</div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <div class="score-value" style="color: var(--orange);">80</div>
+                        <div class="score-label">Match Score</div>
                     </div>
-
-                    <!-- Score Circle -->
-                    <div class="score-circle-container">
-                        <div class="score-circle" style="--score: 78">
-                            <div class="score-number">78</div>
-                            <div class="score-label">Match Score</div>
-                        </div>
-                        <div class="confidence-badge medium">Potential Match</div>
-                    </div>
-
-                    <!-- Right Card -->
-                    <div class="participant-card">
-                        <div class="participant-card-header">
-                            <div class="org-logo secondary">SO</div>
-                            <div class="participant-card-title">
-                                <div class="org-name">Street Outreach Team</div>
-                                <div class="record-id">Record #892</div>
-                            </div>
-                        </div>
-                        <div class="field-comparison">
-                            <div>
-                                <div class="field-label">Name</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">Johnson, Marcus A.</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">Date of Birth</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">March 15, 1998</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">SSN Last 4</div>
-                                <div class="field-row">
-                                    <div class="match-indicator match">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="field-value">8362</div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="field-label">Address</div>
-                                <div class="field-row">
-                                    <div class="match-indicator similar">
-                                        <i class="fas fa-exclamation"></i>
-                                    </div>
-                                    <div class="field-value">145 Oak St<br>Portland, OR 97214</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <span class="severity-badge severity-medium" style="font-size: 1rem; padding: 0.5rem 1rem;">Potential Match - Needs Review</span>
                 </div>
 
-                <!-- Algorithm Breakdown -->
-                <div class="algorithm-breakdown">
-                    <div class="breakdown-title">
-                        <i class="fas fa-calculator"></i>
-                        Algorithm Breakdown
-                    </div>
-                    <div class="breakdown-row">
-                        <div class="breakdown-criterion">
-                            <strong>SSN Last 4 Match</strong><br>
-                            <span style="font-size: 12px; color: var(--gray-600);">✓ Exact match: 8362 = 8362</span>
-                        </div>
-                        <div class="breakdown-bar">
-                            <div class="breakdown-bar-fill" style="width: 100%"></div>
-                        </div>
-                        <div class="breakdown-points">45 / 45 pts</div>
-                    </div>
-                    <div class="breakdown-row">
-                        <div class="breakdown-criterion">
-                            <strong>Date of Birth Match</strong><br>
-                            <span style="font-size: 12px; color: var(--gray-600);">✓ Exact match: 03/15/1998</span>
-                        </div>
-                        <div class="breakdown-bar">
-                            <div class="breakdown-bar-fill" style="width: 100%"></div>
-                        </div>
-                        <div class="breakdown-points">35 / 35 pts</div>
-                    </div>
-                    <div class="breakdown-row">
-                        <div class="breakdown-criterion">
-                            <strong>Name Similarity</strong><br>
-                            <span style="font-size: 12px; color: var(--gray-600);">~ Middle initial added (95% similar)</span>
-                        </div>
-                        <div class="breakdown-bar">
-                            <div class="breakdown-bar-fill" style="width: 60%"></div>
-                        </div>
-                        <div class="breakdown-points">18 / 30 pts</div>
-                    </div>
-                    <div class="breakdown-row">
-                        <div class="breakdown-criterion">
-                            <strong>Total Match Score</strong>
-                        </div>
-                        <div></div>
-                        <div class="breakdown-points">78 / 110 pts</div>
-                    </div>
+                <h3 style="margin: 1.5rem 0 1rem; font-size: 16px;">Record Comparison</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Record A (VPC)</th>
+                            <th>Record B (Street Outreach)</th>
+                            <th>Match?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Name</strong></td>
+                            <td>Tyrell Jenkins</td>
+                            <td>Tyrel Jenkins</td>
+                            <td style="text-align: center;"><span style="color: var(--orange); font-size: 18px;">≈</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date of Birth</strong></td>
+                            <td>2002-05-14</td>
+                            <td>2002-05-15</td>
+                            <td style="text-align: center;"><span style="color: var(--orange); font-size: 18px;">≈</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>SSN Last 4</strong></td>
+                            <td>5567</td>
+                            <td><em style="color: var(--gray-500);">Not provided</em></td>
+                            <td style="text-align: center;"><span style="color: var(--gray-400); font-size: 18px;">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Address</strong></td>
+                            <td>2800 W. Madison St</td>
+                            <td><em style="color: var(--gray-500);">Unknown</em></td>
+                            <td style="text-align: center;"><span style="color: var(--gray-400); font-size: 18px;">✗</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="match-reasons">
+                    <strong>Why this match was suggested (Weighted Scoring):</strong>
+                    <ul>
+                        <li><strong>Name similarity: 96%</strong> - "Tyrell" vs "Tyrel" (likely spelling variation) → 25 points</li>
+                        <li><strong>DOB off by 1 day</strong> - 2002-05-14 vs 2002-05-15 (possible data entry error) → 25 points</li>
+                        <li><strong>SSN unavailable</strong> from Street Outreach → 0 points</li>
+                        <li><strong>High confidence on available fields</strong> - When SSN missing, weight remaining fields more heavily → +30 bonus points</li>
+                        <li><strong>Total: 80 points</strong> - Meets "Potential Match" threshold (70-89)</li>
+                    </ul>
                 </div>
 
-                <!-- Actions -->
-                <div class="match-actions">
-                    <button class="btn btn-reject" onclick="rejectMatch()">
-                        <i class="fas fa-times"></i> Reject Match
-                    </button>
-                    <button class="btn btn-review" onclick="requestHumanReview()">
-                        <i class="fas fa-user"></i> Request Human Review
-                    </button>
-                    <button class="btn btn-confirm" onclick="confirmMatch()">
-                        <i class="fas fa-check"></i> Confirm Match
-                    </button>
+                <div style="display: flex; gap: 12px; margin-top: 2rem;">
+                    <button class="btn btn-primary" style="flex: 1; background: var(--green); border-color: var(--green);"><i class="fas fa-check"></i> Confirm Match</button>
+                    <button class="btn" style="flex: 1; border-color: var(--orange); color: var(--orange);"><i class="fas fa-exclamation-triangle"></i> Needs More Info</button>
+                    <button class="btn" style="flex: 1; border-color: var(--red); color: var(--red);"><i class="fas fa-times"></i> Not Same Person</button>
                 </div>
             </div>
         </div>
@@ -6048,85 +5607,17 @@
 
         // Match modal
         function showMatchModal() {
-            const modal = document.getElementById('match-review-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-
-            // Animate the score circle
-            setTimeout(() => {
-                animateScore(78);
-            }, 300);
+            document.getElementById('match-modal').classList.add('active');
         }
 
-        function closeMatchReview() {
-            const modal = document.getElementById('match-review-modal');
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function confirmMatch() {
-            // Close match review modal
-            closeMatchReview();
-
-            // After brief delay, check for conflicts and open Consensus Builder if needed
-            setTimeout(() => {
-                // Simulate: Check if there are data conflicts
-                const hasConflicts = true; // In real app, this would be determined by comparing field values
-
-                if (hasConflicts) {
-                    // Auto-open Consensus Builder for data reconciliation
-                    showConsensusBuilder();
-                } else {
-                    // No conflicts - just confirm and done
-                    alert('✓ Match confirmed!\n\nParticipant identity established. No data conflicts detected.');
-                }
-            }, 500);
-        }
-
-        function rejectMatch() {
-            closeMatchReview();
-
-            // Show split confirmation
-            setTimeout(() => {
-                alert('✓ Match rejected\n\nP-1031 will split into 2 separate participants:\n\n• P-1031a (Lead Org record)\n• P-1031b (Street Outreach Team record)\n\nEach organization will maintain their own independent participant record.');
-            }, 300);
-        }
-
-        function requestHumanReview() {
-            closeMatchReview();
-
-            setTimeout(() => {
-                alert('👤 Human review requested\n\nP-1031 will be flagged for manual review:\n\n• Status remains "Potential Match"\n• Red flag badge added: "⚠ Flagged for Review"\n• Network administrator notified\n• Neither org can confirm/reject until admin reviews\n\nUse this when:\n→ Unsure if same person\n→ Need more information\n→ Data seems suspicious or conflicting');
-            }, 300);
-        }
-
-        function animateScore(targetScore) {
-            const scoreElement = document.querySelector('.score-number');
-            if (!scoreElement) return;
-
-            let currentScore = 0;
-            const increment = targetScore / 50;
-            const interval = 20;
-
-            const timer = setInterval(() => {
-                currentScore += increment;
-                if (currentScore >= targetScore) {
-                    currentScore = targetScore;
-                    clearInterval(timer);
-                }
-                scoreElement.textContent = Math.round(currentScore);
-            }, interval);
+        function closeMatchModal() {
+            document.getElementById('match-modal').classList.remove('active');
         }
 
         // Close modal on background click
-        window.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('match-review-modal');
-            if (modal) {
-                modal.addEventListener('click', (e) => {
-                    if (e.target.id === 'match-review-modal') {
-                        closeMatchReview();
-                    }
-                });
+        document.getElementById('match-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'match-modal') {
+                closeMatchModal();
             }
         });
 
