@@ -62,6 +62,12 @@
             }
         }
 
+        .demo-button-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
         /* Breadcrumb Navigation (Main Pages) */
         .breadcrumb-nav {
             background: white;
@@ -388,41 +394,6 @@
             overflow: hidden;
         }
 
-        /* Search & Filter Bar */
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            padding: 16px 20px;
-            background: var(--gray-50);
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-teal);
-        }
-
-        .filter-btn {
-            padding: 10px 16px;
-            border: 1px solid var(--border);
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
 
         .view-activity-link {
             color: var(--primary-teal);
@@ -1006,6 +977,7 @@
             border-radius: 8px;
             padding: 24px;
             margin-bottom: 20px;
+            margin-top: 24px;
         }
 
         .section-title {
@@ -1024,6 +996,7 @@
         .identity-table {
             width: 100%;
             border-collapse: collapse;
+            border: 1px solid var(--border);
         }
 
         .identity-table th {
@@ -1787,6 +1760,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 12px;
+            border: 1px solid var(--border);
         }
 
         .involved-persons-table th {
@@ -1800,14 +1774,34 @@
             letter-spacing: 0.05em;
         }
 
+        .involved-persons-table th:first-child {
+            border-left: 1px solid var(--border);
+        }
+
+        .involved-persons-table th:last-child {
+            border-right: 1px solid var(--border);
+        }
+
+        .involved-persons-table thead tr:first-child th {
+            border-top: 1px solid var(--border);
+        }
+
         .involved-persons-table td {
             padding: 16px 12px;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
         }
 
+        .involved-persons-table td:first-child {
+            border-left: 1px solid var(--border);
+        }
+
+        .involved-persons-table td:last-child {
+            border-right: 1px solid var(--border);
+        }
+
         .involved-persons-table tr:last-child td {
-            border-bottom: none;
+            border-bottom: 1px solid var(--border);
         }
 
         .involved-persons-table tr:hover {
@@ -1934,6 +1928,379 @@
             background: var(--gray-50);
             color: var(--gray-900);
         }
+
+        /* Note Composer Styles */
+        .note-composer {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .note-composer-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .note-textarea-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .note-textarea:focus {
+            outline: none;
+            border-color: var(--primary-teal);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+        }
+
+        .note-composer-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .note-textarea-hint {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .note-textarea-hint code {
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--gray-700);
+        }
+
+        /* Autocomplete Dropdown */
+        .mention-autocomplete {
+            position: fixed;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 9999;
+            min-width: 320px;
+            display: none;
+        }
+
+        .mention-autocomplete.active {
+            display: block;
+        }
+
+        .mention-autocomplete-header {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mention-autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .mention-autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .mention-autocomplete-item:hover,
+        .mention-autocomplete-item.selected {
+            background: var(--gray-50);
+        }
+
+        .mention-autocomplete-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .mention-autocomplete-icon.participant {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .mention-autocomplete-icon.incident {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .mention-autocomplete-icon.org {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .mention-autocomplete-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mention-autocomplete-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-900);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mention-autocomplete-meta {
+            font-size: 12px;
+            color: var(--gray-600);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-composer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .auto-tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+        }
+
+        .auto-tag-badge i {
+            font-size: 11px;
+        }
+
+        /* Note Tags in Table */
+        .note-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .note-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-tag.participant-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .note-tag.incident-tag {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        .note-tag.org-tag {
+            background: #e0e7ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+        }
+
+        .note-tags-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        /* Note Time Grouping Styles (Slack-style) */
+        .note-date-separator {
+            position: relative;
+            text-align: center;
+            margin: 24px 0 16px;
+        }
+
+        .note-date-separator-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .note-date-separator-text {
+            position: relative;
+            display: inline-block;
+            background: white;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-900);
+            z-index: 1;
+        }
+
+        .note-timestamp {
+            font-size: 11px;
+            color: var(--gray-600);
+            margin-left: 8px;
+        }
+
+        /* Chat-style Note Messages */
+        .notes-container {
+            padding: 0 20px;
+        }
+
+        .note-message {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .note-message:last-child {
+            border-bottom: none;
+        }
+
+        .note-message:hover {
+            background: var(--gray-50);
+            margin: 0 -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .note-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: var(--primary-teal);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .note-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .note-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .note-author-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 14px;
+        }
+
+        .note-org {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .note-time {
+            font-size: 11px;
+            color: var(--gray-600);
+        }
+
+        .note-type-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .note-body {
+            color: var(--gray-700);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        /* Load More Indicator */
+        .load-more-indicator {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 32px 20px 20px 20px;
+            padding: 16px 0;
+        }
+
+        .load-more-line {
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        .load-more-text {
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .load-more-text i {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .notes-list {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
     </style>
 </head>
 <body>
@@ -1941,10 +2308,16 @@
     <nav class="demo-control-nav">
         <div class="demo-control-nav-content">
             <h1>DEMO ONLY - NOT FINAL UI</h1>
-            <button class="btn btn-primary" onclick="toggleViewMode()">
-                <i class="fas fa-crown" id="view-icon"></i>
-                <span id="view-text">Lead View</span>
-            </button>
+            <div class="demo-button-group">
+                <button class="pii-toggle-btn" onclick="togglePII()">
+                    <span id="pii-icon"><i class="fas fa-lock"></i></span>
+                    <span id="pii-text">PII Hidden</span>
+                </button>
+                <button class="btn btn-primary" onclick="toggleViewMode()">
+                    <i class="fas fa-crown" id="view-icon"></i>
+                    <span id="view-text">Lead View</span>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -2342,19 +2715,6 @@
                 </button>
             </nav>
 
-            <!-- Toolbar -->
-            <div class="toolbar">
-            <input type="text" class="search-input" placeholder="Search participants and incidents...">
-            <button class="filter-btn">
-                <span>▼</span> Filter
-            </button>
-            <div style="flex: 1;"></div>
-            <button class="pii-toggle-btn" onclick="togglePII()">
-                <span id="pii-icon"><i class="fas fa-lock"></i></span>
-                <span id="pii-text">PII Hidden</span>
-            </button>
-        </div>
-
         <!-- PARTICIPANTS Tab Content -->
         <div id="participants-tab" class="tab-content active">
             <!-- Shared Participants Section -->
@@ -2403,7 +2763,7 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1024</a>
+                                        <a href="#" onclick="showParticipantDetail('P-1024'); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1024</a>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2415,7 +2775,7 @@
                                         </div>
                                     </td>
                                     <td>2 hours ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr>
                                     <td>
@@ -2435,7 +2795,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1042</a>
+                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1042</a>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2447,11 +2807,11 @@
                                         </div>
                                     </td>
                                     <td>1 day ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr>
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1056</a>
+                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1056</a>
                                     </td>
                                     <td>
                                         <span class="severity-badge" style="background: #dbeafe; color: var(--blue);">○ Pending Verification</span>
@@ -2463,7 +2823,7 @@
                                         </div>
                                     </td>
                                     <td>3 days ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2492,7 +2852,7 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <a href="#" onclick="showParticipantDetail(); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1063</a>
+                                        <a href="#" onclick="showParticipantDetail(this.textContent); return false;" style="color: var(--primary-teal); text-decoration: none; font-weight: 600;">P-1063</a>
                                     </td>
                                     <td>
                                         <span class="severity-badge severity-low">○ Confirmed</span>
@@ -2504,7 +2864,7 @@
                                         </div>
                                     </td>
                                     <td>6 hours ago</td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -2866,85 +3226,330 @@
             <div class="content-section">
                 <div class="content-section-header">
                     <div>
-                        <div class="content-section-title">Network Notes</div>
-                        <div class="content-section-subtitle">Collaboration notes from network members - sorted by most recent</div>
+                        <div class="content-section-title">Participant Incident Notes</div>
+                        <div class="content-section-subtitle">Collaboration notes from network members - tag participants, incidents, and organizations for cross-referencing</div>
                     </div>
-                    <button class="btn btn-primary">+ Add Note</button>
                 </div>
 
-                <div class="collapsible-section">
-                    <div class="collapsible-header" onclick="toggleSection(this)">
-                        <span class="chevron"><i class="fas fa-chevron-right"></i></span>
-                        <span class="section-icon"><i class="fas fa-sticky-note"></i></span>
-                        <span class="section-label">Recent Notes</span>
-                        <span class="record-count">(11 records)</span>
+                <!-- Note Composer -->
+                <div class="note-composer">
+                    <div class="note-composer-title">
+                        <i class="fas fa-plus-circle" style="color: var(--primary-teal); margin-right: 8px;"></i>
+                        Add New Note
                     </div>
-                    <div class="collapsible-content">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 100px;">Type</th>
-                                    <th style="width: 180px;">Author</th>
-                                    <th>Note</th>
-                                    <th style="width: 150px;">Related To</th>
-                                    <th style="width: 120px;">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><span class="severity-badge severity-critical">Alert</span></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 500;">Mike Rodriguez</div>
-                                        <div style="font-size: 12px; color: var(--gray-600);">Street Outreach</div>
-                                    </td>
-                                    <td>Deandre's associates were arrested. High risk - needs immediate check-in and safety planning.</td>
-                                    <td>Deandre Williams</td>
-                                    <td>Mar 24, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="severity-badge severity-low">Update</span></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 500;">Sarah Johnson</div>
-                                        <div style="font-size: 12px; color: var(--gray-600);">VPC</div>
-                                    </td>
-                                    <td>Marcus attended conflict resolution workshop. Showing good engagement with program.</td>
-                                    <td>Marcus Thompson</td>
-                                    <td>Mar 22, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="severity-badge severity-medium">Follow-up</span></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 500;">John Smith</div>
-                                        <div style="font-size: 12px; color: var(--gray-600);">Lead Org</div>
-                                    </td>
-                                    <td>Reached out to Tyrell Jenkins. Left voicemail. Will try again tomorrow.</td>
-                                    <td>Tyrell Jenkins</td>
-                                    <td>Mar 21, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="severity-badge" style="background: #dbeafe; color: var(--blue);">Coordination</span></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 500;">John Smith</div>
-                                        <div style="font-size: 12px; color: var(--gray-600);">Lead Org</div>
-                                    </td>
-                                    <td>Network meeting scheduled for Friday 3/28 at 10am. Will discuss recent uptick in shootings.</td>
-                                    <td>Network-wide</td>
-                                    <td>Mar 20, 2025</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="severity-badge severity-low">Update</span></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 500;">Sarah Johnson</div>
-                                        <div style="font-size: 12px; color: var(--gray-600);">VPC</div>
-                                    </td>
-                                    <td>Jasmine has completed anger management program. Seeing positive behavior changes.</td>
-                                    <td>Jasmine Rodriguez</td>
-                                    <td>Mar 8, 2025</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="note-textarea-wrapper">
+                        <textarea
+                            id="note-textarea"
+                            class="note-textarea mention-enabled"
+                            placeholder="Type @ to mention participants, incidents, or organizations..."
+                        ></textarea>
+
+                        <!-- Autocomplete Dropdown -->
+                        <div id="mention-autocomplete" class="mention-autocomplete">
+                            <div class="mention-autocomplete-header">Mention...</div>
+                            <div class="mention-list-content">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="note-composer-footer">
+                        <div class="note-textarea-hint">
+                            💡 Type <code>@</code> to tag participants, incidents, or organizations
+                        </div>
+                        <div class="note-composer-actions">
+                            <button class="btn">Cancel</button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Note
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Notes List -->
+                <div class="notes-list">
+                        <!-- Today Section -->
+                        <div class="note-date-separator">
+                            <div class="note-date-separator-line"></div>
+                            <span class="note-date-separator-text">Today</span>
+                        </div>
+                        <div class="notes-container">
+                            <!-- Note 1 -->
+                            <div class="note-message">
+                                <div class="note-avatar">MR</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Mike Rodriguez</span>
+                                        <span class="note-org">Street Outreach</span>
+                                        <span class="note-type-badge severity-badge severity-critical">Alert</span>
+                                        <span class="note-time">2:34 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Deandre's associates were arrested. High risk - needs immediate check-in and safety planning.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-2156')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-2156
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Street Outreach
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note 2 -->
+                            <div class="note-message">
+                                <div class="note-avatar">SC</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Sarah Chen</span>
+                                        <span class="note-org">Peacemakers Austin</span>
+                                        <span class="note-type-badge severity-badge severity-medium">Follow-up</span>
+                                        <span class="note-time">10:15 AM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Need Trauma-Informed Care to update participant contact info for incident follow-up coordination.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-1042')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-1042
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                            <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Trauma Care
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note 3 -->
+                            <div class="note-message">
+                                <div class="note-avatar">SJ</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Sarah Johnson</span>
+                                        <span class="note-org">VPC</span>
+                                        <span class="note-type-badge severity-badge severity-low">Update</span>
+                                        <span class="note-time">9:42 AM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Marcus attended conflict resolution workshop. Showing good engagement with program.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-3091')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-3091
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Yesterday Section -->
+                        <div class="note-date-separator">
+                            <div class="note-date-separator-line"></div>
+                            <span class="note-date-separator-text">Yesterday</span>
+                        </div>
+                        <div class="notes-container">
+                            <!-- Note 4 -->
+                            <div class="note-message">
+                                <div class="note-avatar">JS</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">John Smith</span>
+                                        <span class="note-org">Lead Org</span>
+                                        <span class="note-type-badge severity-badge severity-high">Action Required</span>
+                                        <span class="note-time">4:22 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Marcus Johnson witnessed the incident. Safe Streets should coordinate with Peacemakers for safety planning.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-1089')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-1089
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                            <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Safe Streets
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Peacemakers
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note 5 -->
+                            <div class="note-message">
+                                <div class="note-avatar">JS</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">John Smith</span>
+                                        <span class="note-org">Lead Org</span>
+                                        <span class="note-type-badge" style="background: #dbeafe; color: var(--blue);">Coordination</span>
+                                        <span class="note-time">11:08 AM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Network meeting scheduled for Friday 3/28 at 10am. Will discuss recent uptick in shootings and coordinate response.
+                                    </div>
+                                    <div class="note-tags">
+                                        <span style="font-size: 12px; color: var(--gray-600); font-style: italic;">Network-wide</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thursday Section -->
+                        <div class="note-date-separator">
+                            <div class="note-date-separator-line"></div>
+                            <span class="note-date-separator-text">Thursday, March 27</span>
+                        </div>
+                        <div class="notes-container">
+                            <!-- Note 6 -->
+                            <div class="note-message">
+                                <div class="note-avatar">LM</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Lisa Martinez</span>
+                                        <span class="note-org">Youth Services</span>
+                                        <span class="note-type-badge severity-badge severity-medium">Follow-up</span>
+                                        <span class="note-time">3:15 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Tyrone Robinson at risk due to incident proximity. Youth Services coordinating with Street Outreach for intervention.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-1124')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-1124
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                            <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Youth Services
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Street Outreach
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- March 8 Section -->
+                        <div class="note-date-separator">
+                            <div class="note-date-separator-line"></div>
+                            <span class="note-date-separator-text">Saturday, March 8</span>
+                        </div>
+                        <div class="notes-container">
+                            <!-- Note 7 -->
+                            <div class="note-message">
+                                <div class="note-avatar">SJ</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Sarah Johnson</span>
+                                        <span class="note-org">VPC</span>
+                                        <span class="note-type-badge severity-badge severity-low">Update</span>
+                                        <span class="note-time">1:30 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Jasmine has completed anger management program. Showing positive behavior changes.
+                                    </div>
+                                    <div class="note-tags">
+                                        <span style="font-size: 12px; color: var(--gray-600); font-style: italic;">No tags</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- March 6 Section -->
+                        <div class="note-date-separator">
+                            <div class="note-date-separator-line"></div>
+                            <span class="note-date-separator-text">Wednesday, March 6</span>
+                        </div>
+                        <div class="notes-container">
+                            <!-- Note 8 -->
+                            <div class="note-message">
+                                <div class="note-avatar">TC</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Tom Carter</span>
+                                        <span class="note-org">Safe Streets</span>
+                                        <span class="note-type-badge severity-badge severity-medium">Check-in</span>
+                                        <span class="note-time">5:45 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Connected with family members about Marcus. Setting up family mediation session next week.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showParticipantDetail('P-1089')" class="note-tag participant-tag">
+                                            <i class="fas fa-user"></i> P-1089
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Safe Streets
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note 9 -->
+                            <div class="note-message">
+                                <div class="note-avatar">AM</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Alex Morgan</span>
+                                        <span class="note-org">Trauma-Informed Care</span>
+                                        <span class="note-type-badge" style="background: #dbeafe; color: var(--blue);">Resource</span>
+                                        <span class="note-time">2:10 PM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Mental health resources available for trauma counseling. Can fast-track anyone affected by recent incidents.
+                                    </div>
+                                    <div class="note-tags">
+                                        <span style="font-size: 12px; color: var(--gray-600); font-style: italic;">Network-wide</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Note 10 -->
+                            <div class="note-message">
+                                <div class="note-avatar">KW</div>
+                                <div class="note-content">
+                                    <div class="note-header">
+                                        <span class="note-author-name">Karen Williams</span>
+                                        <span class="note-org">Peacemakers Austin</span>
+                                        <span class="note-type-badge severity-badge severity-high">Alert</span>
+                                        <span class="note-time">10:30 AM</span>
+                                    </div>
+                                    <div class="note-body">
+                                        Social media activity suggests potential retaliation. All network partners should be vigilant with at-risk participants.
+                                    </div>
+                                    <div class="note-tags">
+                                        <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                            <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                        </a>
+                                        <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                            <i class="fas fa-building"></i> Peacemakers
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Load More Indicator -->
+                        <div class="load-more-indicator">
+                            <div class="load-more-line"></div>
+                            <div class="load-more-text">
+                                <i class="fas fa-chevron-down"></i>
+                                Scroll for 47 more notes
+                            </div>
+                            <div class="load-more-line"></div>
+                        </div>
+                    </div>
             </div>
         </div>
     </div>
@@ -2997,7 +3602,7 @@
                                     <td><span class="severity-badge severity-critical">Critical</span></td>
                                     <td><span class="severity-badge severity-low">Accepted</span></td>
                                     <td>Mar 16, 2025<br><span style="font-size: 11px; color: var(--gray-600);">8 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr style="background: #fef3c733;">
                                     <td><strong>Jasmine Rodriguez</strong></td>
@@ -3013,7 +3618,7 @@
                                     <td><span class="severity-badge" style="background: #dbeafe; color: var(--blue);">Routine</span></td>
                                     <td><span class="severity-badge severity-medium">Pending</span></td>
                                     <td>Mar 18, 2025<br><span style="font-size: 11px; color: var(--gray-600);">6 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Marcus Thompson</strong></td>
@@ -3029,7 +3634,7 @@
                                     <td><span class="severity-badge" style="background: #dbeafe; color: var(--blue);">Routine</span></td>
                                     <td><span class="severity-badge severity-low">Accepted</span></td>
                                     <td>Mar 10, 2025<br><span style="font-size: 11px; color: var(--gray-600);">14 days ago</span></td>
-                                    <td><button class="view-btn" onclick="showParticipantDetail()"><i class="fas fa-eye"></i> View</button></td>
+                                    <td><button class="view-btn" onclick="showParticipantDetail('P-1042')"><i class="fas fa-eye"></i> View</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -3492,6 +4097,88 @@
                         </div>
                     </div>
                     <span class="incident-severity medium">Medium</span>
+                </div>
+            </div>
+
+            <!-- Related Notes (filtered for P-1042) -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-sticky-note" style="color: var(--primary-teal); margin-right: 8px;"></i>
+                    Related Notes
+                </div>
+                <div class="section-subtitle">Network notes mentioning this participant</div>
+
+                <!-- Note Composer -->
+                <div class="note-composer" style="margin-top: 16px; padding: 16px;">
+                    <div class="note-textarea-wrapper">
+                        <textarea
+                            id="participant-note-textarea"
+                            class="note-textarea mention-enabled"
+                            placeholder="Add a note about this participant..."
+                            style="min-height: 80px;"
+                        ></textarea>
+
+                        <!-- Autocomplete Dropdown -->
+                        <div id="participant-mention-autocomplete" class="mention-autocomplete">
+                            <div class="mention-autocomplete-header">Mention...</div>
+                            <div class="mention-list-content">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="note-composer-footer">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="auto-tag-badge">
+                                <i class="fas fa-lock"></i>
+                                Auto-tagged: P-1042 DeShawn Williams
+                            </span>
+                            <span class="note-textarea-hint" style="margin: 0;">
+                                💡 Type <code>@</code> to add more tags
+                            </span>
+                        </div>
+                        <div class="note-composer-actions">
+                            <button class="btn">Cancel</button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notes-container" style="margin-top: 16px;">
+                    <!-- Note 1 -->
+                    <div class="note-message">
+                        <div class="note-avatar">SC</div>
+                        <div class="note-content">
+                            <div class="note-header">
+                                <span class="note-author-name">Sarah Chen</span>
+                                <span class="note-org">Peacemakers Austin</span>
+                                <span class="note-type-badge severity-badge severity-medium">Follow-up</span>
+                                <span class="note-time">Today, 10:15 AM</span>
+                            </div>
+                            <div class="note-body">
+                                Need Trauma-Informed Care to update participant contact info for incident follow-up coordination.
+                            </div>
+                            <div class="note-tags">
+                                <a href="javascript:void(0)" onclick="showParticipantDetail('P-1042')" class="note-tag participant-tag">
+                                    <i class="fas fa-user"></i> P-1042
+                                </a>
+                                <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                    <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Trauma Care
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; text-align: center;">
+                    <a href="javascript:void(0)" onclick="showDataStandard('participant-incident'); showTab('notes');" style="color: var(--primary-teal); font-size: 13px; text-decoration: none;">
+                        View all notes →
+                    </a>
                 </div>
             </div>
         </div>
@@ -4058,6 +4745,148 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Related Notes (filtered for INC-0091) -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fas fa-sticky-note" style="color: var(--primary-teal); margin-right: 8px;"></i>
+                    Related Notes
+                </div>
+                <div class="section-subtitle">Network notes mentioning this incident</div>
+
+                <!-- Note Composer -->
+                <div class="note-composer" style="margin-top: 16px; padding: 16px;">
+                    <div class="note-textarea-wrapper">
+                        <textarea
+                            id="incident-note-textarea"
+                            class="note-textarea mention-enabled"
+                            placeholder="Add a note about this incident..."
+                            style="min-height: 80px;"
+                        ></textarea>
+
+                        <!-- Autocomplete Dropdown -->
+                        <div id="incident-mention-autocomplete" class="mention-autocomplete">
+                            <div class="mention-autocomplete-header">Mention...</div>
+                            <div class="mention-list-content">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="note-composer-footer">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="auto-tag-badge">
+                                <i class="fas fa-lock"></i>
+                                Auto-tagged: INC-0091
+                            </span>
+                            <span class="note-textarea-hint" style="margin: 0;">
+                                💡 Type <code>@</code> to add more tags
+                            </span>
+                        </div>
+                        <div class="note-composer-actions">
+                            <button class="btn">Cancel</button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notes-container" style="margin-top: 16px;">
+                    <!-- Note 1 -->
+                    <div class="note-message">
+                        <div class="note-avatar">SC</div>
+                        <div class="note-content">
+                            <div class="note-header">
+                                <span class="note-author-name">Sarah Chen</span>
+                                <span class="note-org">Peacemakers Austin</span>
+                                <span class="note-type-badge severity-badge severity-medium">Follow-up</span>
+                                <span class="note-time">Today, 10:15 AM</span>
+                            </div>
+                            <div class="note-body">
+                                Need Trauma-Informed Care to update participant contact info for incident follow-up coordination.
+                            </div>
+                            <div class="note-tags">
+                                <a href="javascript:void(0)" onclick="showParticipantDetail('P-1042')" class="note-tag participant-tag">
+                                    <i class="fas fa-user"></i> P-1042
+                                </a>
+                                <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                    <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Trauma Care
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Note 2 -->
+                    <div class="note-message">
+                        <div class="note-avatar">JS</div>
+                        <div class="note-content">
+                            <div class="note-header">
+                                <span class="note-author-name">John Smith</span>
+                                <span class="note-org">Lead Org</span>
+                                <span class="note-type-badge severity-badge severity-high">Action Required</span>
+                                <span class="note-time">Yesterday, 4:22 PM</span>
+                            </div>
+                            <div class="note-body">
+                                Marcus Johnson witnessed the incident. Safe Streets should coordinate with Peacemakers for safety planning.
+                            </div>
+                            <div class="note-tags">
+                                <a href="javascript:void(0)" onclick="showParticipantDetail('P-1089')" class="note-tag participant-tag">
+                                    <i class="fas fa-user"></i> P-1089
+                                </a>
+                                <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                    <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Safe Streets
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Peacemakers
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Note 3 -->
+                    <div class="note-message">
+                        <div class="note-avatar">LM</div>
+                        <div class="note-content">
+                            <div class="note-header">
+                                <span class="note-author-name">Lisa Martinez</span>
+                                <span class="note-org">Youth Services</span>
+                                <span class="note-type-badge severity-badge severity-medium">Follow-up</span>
+                                <span class="note-time">Thursday, 3:15 PM</span>
+                            </div>
+                            <div class="note-body">
+                                Tyrone Robinson at risk due to incident proximity. Youth Services coordinating with Street Outreach for intervention.
+                            </div>
+                            <div class="note-tags">
+                                <a href="javascript:void(0)" onclick="showParticipantDetail('P-1124')" class="note-tag participant-tag">
+                                    <i class="fas fa-user"></i> P-1124
+                                </a>
+                                <a href="javascript:void(0)" onclick="showIncidentDetail()" class="note-tag incident-tag">
+                                    <i class="fas fa-exclamation-triangle"></i> INC-0091
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Youth Services
+                                </a>
+                                <a href="javascript:void(0)" onclick="toggleOrgTable()" class="note-tag org-tag">
+                                    <i class="fas fa-building"></i> Street Outreach
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; text-align: center;">
+                    <a href="javascript:void(0)" onclick="showDataStandard('participant-incident'); showTab('notes');" style="color: var(--primary-teal); font-size: 13px; text-decoration: none;">
+                        View all notes →
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -4085,6 +4914,38 @@
             }
         }
 
+        // Sync time tracking functions
+        let lastSyncTimestamp = Date.now();
+
+        function updateSyncTime() {
+            // Updates the "Last synced X minutes ago" display
+            const syncElements = document.querySelectorAll('.sync-time');
+            if (syncElements.length === 0) return;
+
+            const now = Date.now();
+            const diff = Math.floor((now - lastSyncTimestamp) / 1000);
+
+            let timeStr;
+            if (diff < 60) {
+                timeStr = 'just now';
+            } else if (diff < 3600) {
+                const mins = Math.floor(diff / 60);
+                timeStr = `${mins} ${mins === 1 ? 'minute' : 'minutes'} ago`;
+            } else {
+                const hours = Math.floor(diff / 3600);
+                timeStr = `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+            }
+
+            syncElements.forEach(el => {
+                el.textContent = timeStr;
+            });
+        }
+
+        function startSyncSimulation() {
+            // Update sync time display every minute
+            setInterval(updateSyncTime, 60000);
+        }
+
         // Tab switching within data standard
         function showTab(tabName) {
             // Update tab buttons
@@ -4110,12 +4971,17 @@
             // Show overview page by default
             showNetworkOverview();
 
-            // Initialize sync timestamp
-            lastSyncTimestamp = Date.now() - 120000; // 2 minutes ago
+            // Initialize sync timestamp (set to 2 minutes ago for demo)
+            lastSyncTimestamp = Date.now() - 120000;
             updateSyncTime();
 
             // Start sync simulation (for demo)
             startSyncSimulation();
+
+            // Initialize all mention-enabled textareas
+            document.querySelectorAll('.mention-enabled').forEach(textarea => {
+                initializeMentionAutocomplete(textarea);
+            });
         });
 
         // Collapsible sections
@@ -4290,11 +5156,13 @@
         });
 
         // Participant detail page
-        function showParticipantDetail() {
+        function showParticipantDetail(participantId) {
             // Hide main container and breadcrumb nav, show detail page
             document.getElementById('main-container').style.display = 'none';
             document.getElementById('data-standard-nav').style.display = 'none';
             document.getElementById('participant-detail-page').style.display = 'block';
+            // In a real app, we would load data for the specific participantId
+            console.log('Showing participant detail for:', participantId);
             // Scroll to top
             window.scrollTo(0, 0);
         }
@@ -4325,6 +5193,191 @@
             document.getElementById('incident-detail-page').style.display = 'none';
             // Scroll to top
             window.scrollTo(0, 0);
+        }
+
+        // @ Mention Autocomplete Functionality
+        const mentionData = [
+            // Participants
+            { type: 'participant', id: 'P-1042', name: 'DeShawn Williams', meta: 'Victim', icon: 'fa-user' },
+            { type: 'participant', id: 'P-1089', name: 'Marcus Johnson', meta: 'Witness', icon: 'fa-user' },
+            { type: 'participant', id: 'P-1124', name: 'Tyrone Robinson', meta: 'At Risk', icon: 'fa-user' },
+            { type: 'participant', id: 'P-2156', name: 'Deandre Williams', meta: 'Participant', icon: 'fa-user' },
+            { type: 'participant', id: 'P-3091', name: 'Marcus Thompson', meta: 'Participant', icon: 'fa-user' },
+            { type: 'participant', id: 'P-1024', name: 'Jamal Davis', meta: 'Participant', icon: 'fa-user' },
+            { type: 'participant', id: 'P-1056', name: 'Keisha Brown', meta: 'Participant', icon: 'fa-user' },
+            // Incidents
+            { type: 'incident', id: 'INC-0091', name: 'Shooting - E. William Cannon Dr.', meta: 'Critical', icon: 'fa-exclamation-triangle' },
+            { type: 'incident', id: 'INC-432', name: 'Assault - Manor Rd', meta: 'High', icon: 'fa-exclamation-triangle' },
+            { type: 'incident', id: 'INC-401', name: 'Threats - Riverside Dr', meta: 'Medium', icon: 'fa-exclamation-triangle' },
+            // Organizations
+            { type: 'org', id: 'peacemakers', name: 'Peacemakers Austin', meta: 'Member Organization', icon: 'fa-building' },
+            { type: 'org', id: 'trauma-care', name: 'Trauma-Informed Care', meta: 'Member Organization', icon: 'fa-building' },
+            { type: 'org', id: 'street-outreach', name: 'Street Outreach Team', meta: 'Member Organization', icon: 'fa-building' },
+            { type: 'org', id: 'youth-services', name: 'Youth Services', meta: 'Member Organization', icon: 'fa-building' },
+            { type: 'org', id: 'safe-streets', name: 'Safe Streets East Austin', meta: 'Member Organization', icon: 'fa-building' },
+            { type: 'org', id: 'vpc', name: 'Violence Prevention Coalition', meta: 'Member Organization', icon: 'fa-building' }
+        ];
+
+        // Initialize mention functionality for each textarea
+        function initializeMentionAutocomplete(textarea) {
+            if (!textarea) return;
+
+            const textareaId = textarea.id;
+            const autocompleteId = textareaId.replace('note-textarea', 'mention-autocomplete');
+            const autocomplete = document.getElementById(autocompleteId);
+            const listContainer = autocomplete ? autocomplete.querySelector('.mention-list-content') : null;
+
+            if (!autocomplete || !listContainer) return;
+
+            let mentionStartPos = -1;
+            let mentionQuery = '';
+            let selectedMentionIndex = 0;
+
+            textarea.addEventListener('input', function(e) {
+                const text = this.value;
+                const cursorPos = this.selectionStart;
+
+                // Find the last @ symbol before cursor
+                const textBeforeCursor = text.substring(0, cursorPos);
+                const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+                if (lastAtIndex !== -1) {
+                    // Check if there's a space between @ and cursor
+                    const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+                    if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                        mentionStartPos = lastAtIndex;
+                        mentionQuery = textAfterAt.toLowerCase();
+                        showMentionAutocomplete();
+                    } else {
+                        hideMentionAutocomplete();
+                    }
+                } else {
+                    hideMentionAutocomplete();
+                }
+            });
+
+            textarea.addEventListener('keydown', function(e) {
+                if (!autocomplete.classList.contains('active')) return;
+
+                const items = listContainer.querySelectorAll('.mention-autocomplete-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedMentionIndex = Math.min(selectedMentionIndex + 1, items.length - 1);
+                    updateMentionSelection();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedMentionIndex = Math.max(selectedMentionIndex - 1, 0);
+                    updateMentionSelection();
+                } else if (e.key === 'Enter' || e.key === 'Tab') {
+                    if (items.length > 0) {
+                        e.preventDefault();
+                        insertMention(items[selectedMentionIndex].dataset.mentionData);
+                    }
+                } else if (e.key === 'Escape') {
+                    hideMentionAutocomplete();
+                }
+            });
+
+            // Close on click outside
+            document.addEventListener('click', function(e) {
+                if (!textarea.contains(e.target) && !autocomplete.contains(e.target)) {
+                    hideMentionAutocomplete();
+                }
+            });
+
+            function showMentionAutocomplete() {
+                // Filter data based on query
+                const filtered = mentionData.filter(item => {
+                    const searchStr = `${item.name} ${item.id} ${item.meta}`.toLowerCase();
+                    return searchStr.includes(mentionQuery);
+                });
+
+                if (filtered.length === 0) {
+                    hideMentionAutocomplete();
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                filtered.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'mention-autocomplete-item';
+                    if (index === 0) div.classList.add('selected');
+                    div.dataset.mentionData = JSON.stringify(item);
+
+                    const icon = document.createElement('div');
+                    icon.className = `mention-autocomplete-icon ${item.type}`;
+                    icon.innerHTML = `<i class="fas ${item.icon}"></i>`;
+
+                    const info = document.createElement('div');
+                    info.className = 'mention-autocomplete-info';
+
+                    const name = document.createElement('div');
+                    name.className = 'mention-autocomplete-name';
+                    name.textContent = `${item.name} (${item.id})`;
+
+                    const meta = document.createElement('div');
+                    meta.className = 'mention-autocomplete-meta';
+                    meta.textContent = item.meta;
+
+                    info.appendChild(name);
+                    info.appendChild(meta);
+
+                    div.appendChild(icon);
+                    div.appendChild(info);
+
+                    div.addEventListener('click', function() {
+                        insertMention(this.dataset.mentionData);
+                    });
+
+                    listContainer.appendChild(div);
+                });
+
+                // Position the dropdown using fixed positioning
+                const textareaRect = textarea.getBoundingClientRect();
+                autocomplete.style.left = textareaRect.left + 'px';
+                autocomplete.style.bottom = (window.innerHeight - textareaRect.top + 8) + 'px';
+                autocomplete.style.maxWidth = textareaRect.width + 'px';
+
+                selectedMentionIndex = 0;
+                autocomplete.classList.add('active');
+            }
+
+            function hideMentionAutocomplete() {
+                autocomplete.classList.remove('active');
+                mentionStartPos = -1;
+                mentionQuery = '';
+            }
+
+            function updateMentionSelection() {
+                const items = listContainer.querySelectorAll('.mention-autocomplete-item');
+                items.forEach((item, index) => {
+                    if (index === selectedMentionIndex) {
+                        item.classList.add('selected');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                });
+            }
+
+            function insertMention(dataStr) {
+                const data = JSON.parse(dataStr);
+                const text = textarea.value;
+                const beforeMention = text.substring(0, mentionStartPos);
+                const afterMention = text.substring(textarea.selectionStart);
+
+                // Insert mention tag
+                const mentionTag = `@${data.name} (${data.id})`;
+                textarea.value = beforeMention + mentionTag + ' ' + afterMention;
+
+                // Set cursor position after the mention
+                const newCursorPos = beforeMention.length + mentionTag.length + 1;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+                textarea.focus();
+
+                hideMentionAutocomplete();
+            }
         }
     </script>
 </body>
