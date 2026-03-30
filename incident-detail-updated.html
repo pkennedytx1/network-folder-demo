@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Detail - Network Document Folder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-teal: #0d9488;
+            --primary-teal-hover: #0f766e;
+            --dark-teal: #003d50;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --red: #dc2626;
+            --blue: #3b82f6;
+            --yellow: #eab308;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Navigation */
+        .secondary-nav {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .secondary-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .secondary-breadcrumb {
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        .secondary-breadcrumb a {
+            color: var(--gray-600);
+            text-decoration: none;
+        }
+
+        .secondary-breadcrumb a:hover {
+            color: var(--gray-900);
+        }
+
+        .secondary-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--gray-700);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--gray-50);
+        }
+
+        .btn-primary {
+            background: var(--primary-teal);
+            color: white;
+            border-color: var(--primary-teal);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-teal-hover);
+        }
+
+        /* Incident Header Card */
+        .incident-header-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .incident-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .incident-title-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .badge-critical {
+            background: var(--red);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .incident-subtitle {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 16px;
+        }
+
+        .org-badges-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .org-badge-pill {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .incident-meta-row {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 20px;
+        }
+
+        .incident-meta-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .incident-meta-icon {
+            color: var(--primary-teal);
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .incident-meta-label {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+        }
+
+        .incident-meta-value {
+            font-size: 14px;
+            color: var(--gray-900);
+            font-weight: 500;
+        }
+
+        .incident-tags-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .incident-tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        /* Description Box */
+        .description-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .description-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .description-text {
+            font-size: 14px;
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        /* Map Section */
+        .map-section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 400px;
+            background: var(--gray-100);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        /* Simulated map with Amazon Location Service styling */
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e6f3f0 0%, #d4e8e4 100%);
+            position: relative;
+        }
+
+        .map-marker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -100%);
+            width: 40px;
+            height: 40px;
+            background: var(--red);
+            border-radius: 50% 50% 50% 0;
+            transform-origin: 0 0;
+            transform: translate(-50%, -100%) rotate(-45deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .map-marker::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-control-btn {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .map-control-btn:hover {
+            background: var(--gray-50);
+        }
+
+        .map-info-box {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 13px;
+        }
+
+        .map-info-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .map-info-address {
+            color: var(--gray-600);
+            font-size: 12px;
+        }
+
+        .map-legend {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 11px;
+            color: var(--gray-600);
+        }
+
+        /* Involved Persons Table */
+        .involved-persons-section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .involved-persons-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .involved-persons-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .involved-persons-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .involved-persons-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .involved-persons-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .participant-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-teal);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .participant-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .participant-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .participant-id {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--orange);
+            color: white;
+        }
+
+        .role-badge.victim {
+            background: var(--red);
+        }
+
+        .role-badge.witness {
+            background: var(--blue);
+        }
+
+        .role-badge.at-risk {
+            background: var(--yellow);
+            color: var(--gray-900);
+        }
+
+        .org-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .org-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--gray-700);
+        }
+
+        .org-icon-mini {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--gray-200);
+            color: var(--gray-700);
+            font-size: 9px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .last-contact {
+            font-size: 13px;
+            color: var(--gray-700);
+        }
+
+        .last-contact-date {
+            color: var(--gray-600);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .icon-btn:hover {
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+
+        /* Response Status Section */
+        .response-status-section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .response-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .response-legend {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .org-response-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .org-response-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .org-response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .org-response-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .org-icon-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: var(--primary-teal);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .org-response-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .status-badge-progress {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--blue);
+            color: white;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .actions-column-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            color: var(--gray-600);
+        }
+
+        .actions-column-title.in-progress {
+            color: var(--blue);
+        }
+
+        .actions-column-title.completed {
+            color: var(--green);
+        }
+
+        .action-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--gray-700);
+        }
+
+        .action-checkbox {
+            color: var(--gray-400);
+        }
+
+        .action-checkbox.checked {
+            color: var(--green);
+        }
+
+        .org-response-actions {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="secondary-nav">
+        <div class="secondary-nav-content">
+            <div class="secondary-breadcrumb">
+                <a href="#">My Networks</a> &gt;
+                <a href="#">Chicago West Side CVI Network</a> &gt;
+                <a href="#">Participant Incident</a> &gt;
+                <strong>INC-0091</strong>
+            </div>
+            <div class="secondary-actions">
+                <button class="btn">
+                    <i class="fas fa-file-download"></i> Export Report
+                </button>
+                <button class="btn btn-primary">
+                    Update Status
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+        <!-- Header Card -->
+        <div class="incident-header-card">
+            <div class="incident-title-row">
+                <span class="incident-title-text">Shooting</span>
+                <span class="badge-critical">Critical</span>
+            </div>
+            <div class="incident-subtitle">INC-0091 | Reported by Peacemakers Austin</div>
+
+            <div class="org-badges-row">
+                <span class="org-badge-pill">Peacemakers</span>
+                <span class="org-badge-pill">Trauma-Informed</span>
+                <span class="org-badge-pill">Safe</span>
+                <span class="org-badge-pill">Austin</span>
+            </div>
+
+            <div class="incident-meta-row">
+                <div class="incident-meta-item">
+                    <span class="incident-meta-icon"><i class="fas fa-map-marker-alt"></i></span>
+                    <div class="incident-meta-content">
+                        <div class="incident-meta-label">Location</div>
+                        <div class="incident-meta-value">Dove Springs - E. William Cannon Dr.</div>
+                    </div>
+                </div>
+                <div class="incident-meta-item">
+                    <span class="incident-meta-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <div class="incident-meta-content">
+                        <div class="incident-meta-label">Date Reported</div>
+                        <div class="incident-meta-value">Feb 20, 2026</div>
+                    </div>
+                </div>
+                <div class="incident-meta-item">
+                    <span class="incident-meta-icon"><i class="fas fa-building"></i></span>
+                    <div class="incident-meta-content">
+                        <div class="incident-meta-label">Reporting Organization</div>
+                        <div class="incident-meta-value">Peacemakers Austin</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="incident-tags-row">
+                <span class="incident-tag">Gun Violence</span>
+                <span class="incident-tag">Hospital Response</span>
+                <span class="incident-tag">Active Case</span>
+            </div>
+        </div>
+
+        <!-- Incident Description -->
+        <div class="description-box">
+            <div class="description-title">Incident Description</div>
+            <div class="description-text">
+                Shooting incident involving one network participant. Participant sustained non-life-threatening injuries. Hospital-based intervention team responded within 2 hours. Immediate safety planning initiated for affected community members.
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-section">
+            <div class="description-title">
+                <i class="fas fa-map-marker-alt" style="color: var(--primary-teal); margin-right: 8px;"></i>
+                Incident Location
+            </div>
+            <div class="map-container">
+                <div class="map-placeholder">
+                    <!-- Map Marker -->
+                    <div class="map-marker"></div>
+
+                    <!-- Map Controls -->
+                    <div class="map-controls">
+                        <button class="map-control-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="map-control-btn">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="map-control-btn">
+                            <i class="fas fa-location-arrow"></i>
+                        </button>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="map-legend">
+                        © Amazon Location Service
+                    </div>
+
+                    <!-- Location Info Box -->
+                    <div class="map-info-box">
+                        <div class="map-info-title">E. William Cannon Dr.</div>
+                        <div class="map-info-address">Dove Springs, Austin, TX 78744</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Involved Persons (Table Format) -->
+        <div class="involved-persons-section">
+            <div class="description-title">Involved Persons (1)</div>
+            <table class="involved-persons-table">
+                <thead>
+                    <tr>
+                        <th>Participant</th>
+                        <th>Role in Incident</th>
+                        <th>Organizations</th>
+                        <th>Last Contact</th>
+                        <th>Age</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="participant-cell">
+                                <div class="participant-avatar">DW</div>
+                                <div class="participant-info">
+                                    <div class="participant-name">DeShawn Williams</div>
+                                    <div class="participant-id">P-1042</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge victim">Victim</span>
+                        </td>
+                        <td>
+                            <div class="org-list">
+                                <div class="org-item">
+                                    <div class="org-icon-mini">PA</div>
+                                    Peacemakers Austin
+                                </div>
+                                <div class="org-item">
+                                    <div class="org-icon-mini">TC</div>
+                                    Trauma-Informed Care
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="last-contact">
+                                Hospital Visit
+                                <div class="last-contact-date">2 hours ago</div>
+                            </div>
+                        </td>
+                        <td>19</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="icon-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Additional example row -->
+                    <tr>
+                        <td>
+                            <div class="participant-cell">
+                                <div class="participant-avatar">MJ</div>
+                                <div class="participant-info">
+                                    <div class="participant-name">Marcus Johnson</div>
+                                    <div class="participant-id">P-1089</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge witness">Witness</span>
+                        </td>
+                        <td>
+                            <div class="org-list">
+                                <div class="org-item">
+                                    <div class="org-icon-mini">PA</div>
+                                    Peacemakers Austin
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="last-contact">
+                                Phone Call
+                                <div class="last-contact-date">5 hours ago</div>
+                            </div>
+                        </td>
+                        <td>21</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="icon-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- At-risk example -->
+                    <tr>
+                        <td>
+                            <div class="participant-cell">
+                                <div class="participant-avatar">TR</div>
+                                <div class="participant-info">
+                                    <div class="participant-name">Tyrone Robinson</div>
+                                    <div class="participant-id">P-1124</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge at-risk">At Risk</span>
+                        </td>
+                        <td>
+                            <div class="org-list">
+                                <div class="org-item">
+                                    <div class="org-icon-mini">SO</div>
+                                    Street Outreach Team
+                                </div>
+                                <div class="org-item">
+                                    <div class="org-icon-mini">YS</div>
+                                    Youth Services
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="last-contact">
+                                Street Outreach
+                                <div class="last-contact-date">1 day ago</div>
+                            </div>
+                        </td>
+                        <td>17</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="icon-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Organization Response Status -->
+        <div class="response-status-section">
+            <div class="response-status-header">
+                <div class="description-title" style="margin: 0;">Organization Response Status</div>
+                <div class="response-legend">
+                    <div>Not Started</div>
+                    <div>In Progress</div>
+                    <div>Complete</div>
+                </div>
+            </div>
+
+            <!-- Peacemakers Austin -->
+            <div class="org-response-card">
+                <div class="org-response-header">
+                    <div class="org-response-left">
+                        <div class="org-icon-small">PA</div>
+                        <div class="org-response-name">Peacemakers Austin</div>
+                    </div>
+                    <span class="status-badge-progress">In Progress</span>
+                </div>
+                <div class="actions-grid">
+                    <div class="actions-column">
+                        <div class="actions-column-title in-progress">IN PROGRESS</div>
+                        <div class="action-item">
+                            <span class="action-checkbox">○</span>
+                            <span>Ongoing bedside support</span>
+                        </div>
+                        <div class="action-item">
+                            <span class="action-checkbox">○</span>
+                            <span>Daily safety check-ins</span>
+                        </div>
+                    </div>
+                    <div class="actions-column">
+                        <div class="actions-column-title completed">COMPLETED</div>
+                        <div class="action-item">
+                            <span class="action-checkbox checked">✓</span>
+                            <span>Bedside response initiated</span>
+                        </div>
+                        <div class="action-item">
+                            <span class="action-checkbox checked">✓</span>
+                            <span>Safety perimeter canvass completed</span>
+                        </div>
+                    </div>
+                    <div class="actions-column"></div>
+                </div>
+                <div class="org-response-actions">
+                    <button class="btn">Add Action</button>
+                    <button class="btn">Update Status</button>
+                </div>
+            </div>
+
+            <!-- Trauma-Informed Care Network -->
+            <div class="org-response-card">
+                <div class="org-response-header">
+                    <div class="org-response-left">
+                        <div class="org-icon-small">TC</div>
+                        <div class="org-response-name">Trauma-Informed Care Network</div>
+                    </div>
+                    <span class="status-badge-progress">In Progress</span>
+                </div>
+                <div class="actions-grid">
+                    <div class="actions-column">
+                        <div class="actions-column-title in-progress">IN PROGRESS</div>
+                        <div class="action-item">
+                            <span class="action-checkbox">○</span>
+                            <span>Trauma counseling sessions</span>
+                        </div>
+                    </div>
+                    <div class="actions-column">
+                        <div class="actions-column-title completed">COMPLETED</div>
+                        <div class="action-item">
+                            <span class="action-checkbox checked">✓</span>
+                            <span>Initial assessment</span>
+                        </div>
+                        <div class="action-item">
+                            <span class="action-checkbox checked">✓</span>
+                            <span>Family support plan</span>
+                        </div>
+                    </div>
+                    <div class="actions-column"></div>
+                </div>
+                <div class="org-response-actions">
+                    <button class="btn">Add Action</button>
+                    <button class="btn">Update Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
